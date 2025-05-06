@@ -6,7 +6,7 @@ $user="root";
 $password="";
 $dbname="ricelink";
 
-$conn=mysqli_connect($server, $user, $password, $dbase );
+$conn=mysqli_connect($server, $user, $password, $dbname);
 
 if(!$conn){
 
