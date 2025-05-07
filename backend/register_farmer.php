@@ -6,6 +6,19 @@ include('db_connect.php');
 $name = $age = $address = $phone = $whatsapp = $email = $password = $created_at =  ""; // Initialize variables
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+
+    // 👇 CAPTCHA Verification - Add this early
+    $recaptcha_secret = "6LdWfzErAAAAAAtqS9QQ6wKzghekK9S6BSIM53bz"; 
+    $recaptcha_response = $_POST['g-recaptcha-response'];
+
+    $verify = file_get_contents("https://www.google.com/recaptcha/api/siteverify?secret=$recaptcha_secret&response=$recaptcha_response");
+    $captcha = json_decode($verify);
+
+    if (!$captcha->success) {
+        $errors['captcha'] = "Please verify that you're not a robot.";
+    }
+
+
     $name = trim($_POST['name']); 
     $age = trim($_POST['age']);
     $address = trim($_POST['address']);
@@ -153,6 +166,8 @@ $conn->close();
             background: #0056b3;
         }
     </style>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+
 </head>
 <body>
 
@@ -191,7 +206,9 @@ $conn->close();
     <input type="password" name="confirmpassword" id="confirmpassword" placeholder="Confirm Password">
     <span class="error"><?= $errors['confirmpassword'] ?? '' ?></span>
 
-    <input type="submit" value="Sign Up" name="signup" class="btn">
+    <!-- Add this inside your <form> -->
+        <div class="g-recaptcha" data-sitekey="6LdWfzErAAAAADp0LpnvP845O4a7RmQhpvsB2Czx"></div>
+        <input type="submit" value="Sign Up" name="signup" class="btn">
 </form>
 
 </div>
