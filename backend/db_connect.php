@@ -1,9 +1,9 @@
 <?php 
 
 
-$server="mysql";
-$user="ricelink_user";
-$password="ricelink_password";
+$server="localhost";
+$user="root";
+$password="";
 $dbname="ricelink";
 
 $conn=mysqli_connect($server, $user, $password, $dbname);
