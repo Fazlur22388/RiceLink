@@ -74,133 +74,7 @@ $locations_result = $conn->query($locations_query);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Browse Rice Listings - RiceLink</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f5f5f5;
-        }
-        .container {
-            width: 90%;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .header {
-            background-color: rgb(22, 199, 96);
-            padding: 15px 0;
-            color: white;
-        }
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 90%;
-            margin: 0 auto;
-        }
-        .header h1 {
-            margin: 0;
-        }
-        .nav-links a {
-            color: white;
-            text-decoration: none;
-            margin-left: 20px;
-        }
-        .filters-container {
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        .filters-form {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            align-items: flex-end;
-        }
-        .filter-group {
-            flex: 1;
-            min-width: 150px;
-        }
-        .filter-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        .filter-group select, .filter-group input {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        .listings-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-        }
-        .listing-card {
-            background: white;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease;
-        }
-        .listing-card:hover {
-            transform: translateY(-5px);
-        }
-        .listing-image {
-            height: 200px;
-            background-color: #e9e9e9;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .listing-image img {
-            max-width: 100%;
-            max-height: 100%;
-        }
-        .listing-details {
-            padding: 15px;
-        }
-        .listing-title {
-            font-size: 18px;
-            margin: 0 0 10px 0;
-            color: rgb(22, 199, 96);
-        }
-        .listing-meta {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-        }
-        .listing-price {
-            font-weight: bold;
-            font-size: 18px;
-        }
-        .listing-location {
-            color: #666;
-        }
-        .btn {
-            background: rgb(22, 199, 96);
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-        }
-        .filter-btn {
-            min-width: 120px;
-        }
-        .no-results {
-            grid-column: 1 / -1;
-            text-align: center;
-            padding: 50px;
-            background: white;
-            border-radius: 8px;
-        }
-    </style>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <div class="header">
@@ -208,6 +82,7 @@ $locations_result = $conn->query($locations_query);
             <h1>RiceLink</h1>
             <div class="nav-links">
                 <a href="buyer-dashboard.php">Dashboard</a>
+                <a href="messages.php">Messages</a>
                 <a href="logout.php">Logout</a>
             </div>
         </div>
@@ -276,28 +151,29 @@ $locations_result = $conn->query($locations_query);
                     <div class="listing-card">
                         <div class="listing-image">
                             <?php if (!empty($listing['image_url'])): ?>
-                                <img src="<?php echo htmlspecialchars($listing['image_url']); ?>" alt="Rice">
+                                <img src="<?php echo htmlspecialchars($listing['image_url']); ?>" alt="Rice Image">
                             <?php else: ?>
-                                <div style="color: #999;">Rice Image</div>
+                                <div style="color: #999; font-size: 18px;">No image available</div>
                             <?php endif; ?>
                         </div>
                         <div class="listing-details">
                             <h3 class="listing-title"><?php echo htmlspecialchars($listing['title']); ?></h3>
                             <div class="listing-meta">
-                                <span class="listing-price">Rs. <?php echo number_format($listing['price_per_kg'], 2); ?>/kg</span>
-                                <span class="listing-location"><?php echo htmlspecialchars($listing['location']); ?></span>
+                                <div class="listing-price">Rs. <?php echo number_format($listing['price_per_kg'], 2); ?>/kg</div>
+                                <div class="listing-location"><?php echo htmlspecialchars($listing['location']); ?></div>
                             </div>
                             <p>Type: <?php echo htmlspecialchars($listing['rice_type']); ?></p>
-                            <p>Quantity: <?php echo htmlspecialchars($listing['quantity']); ?> kg</p>
-                            <p>Seller: <?php echo htmlspecialchars($listing['farmer_name']); ?></p>
-                            <a href="listing-detail.php?id=<?php echo $listing['id']; ?>" class="btn">View Details</a>
+                            <p>Available: <?php echo htmlspecialchars($listing['quantity']); ?> kg</p>
+                            <p>
+                                <a href="listing-detail.php?id=<?php echo $listing['id']; ?>" class="btn">View Details</a>
+                            </p>
                         </div>
                     </div>
                 <?php endwhile; ?>
             <?php else: ?>
                 <div class="no-results">
-                    <h3>No listings found</h3>
-                    <p>Try adjusting your filters to see more results.</p>
+                    <h3>No listings found matching your criteria</h3>
+                    <p>Try adjusting your filters or check back later for new listings.</p>
                 </div>
             <?php endif; ?>
         </div>

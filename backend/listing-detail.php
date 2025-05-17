@@ -67,126 +67,7 @@ if (isset($_POST['bookmark_action'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo htmlspecialchars($listing['title']); ?> - RiceLink</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f5f5f5;
-        }
-        .container {
-            width: 90%;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .header {
-            background-color: rgb(22, 199, 96);
-            padding: 15px 0;
-            color: white;
-        }
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 90%;
-            margin: 0 auto;
-        }
-        .header h1 {
-            margin: 0;
-        }
-        .nav-links a {
-            color: white;
-            text-decoration: none;
-            margin-left: 20px;
-        }
-        .back-link {
-            display: inline-block;
-            margin-bottom: 20px;
-            color: rgb(22, 199, 96);
-            text-decoration: none;
-        }
-        .listing-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 30px;
-            background: white;
-            border-radius: 8px;
-            padding: 30px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        .listing-image {
-            flex: 1;
-            min-width: 300px;
-            max-width: 500px;
-            background-color: #e9e9e9;
-            border-radius: 8px;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 350px;
-        }
-        .listing-image img {
-            max-width: 100%;
-            max-height: 100%;
-        }
-        .listing-details {
-            flex: 1;
-            min-width: 300px;
-        }
-        .listing-title {
-            font-size: 24px;
-            margin: 0 0 15px 0;
-            color: rgb(22, 199, 96);
-        }
-        .listing-price {
-            font-size: 22px;
-            font-weight: bold;
-            margin-bottom: 20px;
-        }
-        .detail-item {
-            margin-bottom: 15px;
-        }
-        .detail-label {
-            font-weight: bold;
-            color: #555;
-        }
-        .seller-info {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
-        }
-        .btn {
-            background: rgb(22, 199, 96);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-            margin-right: 10px;
-            font-size: 16px;
-        }
-        .btn-outline {
-            background: white;
-            color: rgb(22, 199, 96);
-            border: 1px solid rgb(22, 199, 96);
-        }
-        .btn-danger {
-            background: #ff6b6b;
-        }
-        .action-buttons {
-            margin-top: 20px;
-            display: flex;
-            gap: 10px;
-        }
-        .description {
-            margin: 20px 0;
-            line-height: 1.6;
-        }
-    </style>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <div class="header">
@@ -195,6 +76,7 @@ if (isset($_POST['bookmark_action'])) {
             <div class="nav-links">
                 <a href="buyer-dashboard.php">Dashboard</a>
                 <a href="browse-listings.php">Browse Listings</a>
+                <a href="messages.php">Messages</a>
                 <a href="logout.php">Logout</a>
             </div>
         </div>
@@ -206,7 +88,7 @@ if (isset($_POST['bookmark_action'])) {
         <div class="listing-container">
             <div class="listing-image">
                 <?php if (!empty($listing['image_url'])): ?>
-                    <img src="<?php echo htmlspecialchars($listing['image_url']); ?>" alt="Rice">
+                    <img src="<?php echo htmlspecialchars($listing['image_url']); ?>" alt="Rice Image">
                 <?php else: ?>
                     <div style="color: #999; font-size: 18px;">No image available</div>
                 <?php endif; ?>
@@ -253,8 +135,15 @@ if (isset($_POST['bookmark_action'])) {
                     </div>
                     
                     <div class="detail-item">
-                        <span class="detail-label">Phone:</span> 
+                        <span class="detail-label">Contact Phone:</span> 
                         <?php echo htmlspecialchars($listing['phone']); ?>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <span class="detail-label">Email:</span> 
+                        <a href="mailto:<?php echo htmlspecialchars($listing['email']); ?>">
+                            <?php echo htmlspecialchars($listing['email']); ?>
+                        </a>
                     </div>
                     
                     <?php if (!empty($listing['whatsapp'])): ?>
@@ -263,25 +152,22 @@ if (isset($_POST['bookmark_action'])) {
                         <?php echo htmlspecialchars($listing['whatsapp']); ?>
                     </div>
                     <?php endif; ?>
-                    
-                    <div class="detail-item">
-                        <span class="detail-label">Email:</span> 
-                        <?php echo htmlspecialchars($listing['email']); ?>
-                    </div>
                 </div>
                 
                 <div class="action-buttons">
-                    <a href="message-farmer.php?farmer_id=<?php echo $listing['farmer_id']; ?>&listing_id=<?php echo $listing_id; ?>" class="btn">Contact Farmer</a>
-                    
-                    <form method="post" style="display: inline;">
+                    <!-- Bookmark/Unbookmark Button -->
+                    <form method="POST" style="display: inline;">
                         <?php if ($is_bookmarked): ?>
                             <input type="hidden" name="bookmark_action" value="unbookmark">
-                            <button type="submit" class="btn btn-danger">Remove Bookmark</button>
+                            <button type="submit" class="btn btn-outline">Remove Bookmark</button>
                         <?php else: ?>
                             <input type="hidden" name="bookmark_action" value="bookmark">
                             <button type="submit" class="btn btn-outline">Bookmark Listing</button>
                         <?php endif; ?>
                     </form>
+                    
+                    <!-- Message Farmer Button -->
+                    <a href="message-farmer.php?farmer_id=<?php echo $listing['farmer_id']; ?>&listing_id=<?php echo $listing['id']; ?>" class="btn">Message Farmer</a>
                 </div>
             </div>
         </div>

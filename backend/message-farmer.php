@@ -94,146 +94,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['message'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Message Farmer - RiceLink</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f5f5f5;
-        }
-        .container {
-            width: 90%;
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .header {
-            background-color: rgb(22, 199, 96);
-            padding: 15px 0;
-            color: white;
-        }
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 90%;
-            margin: 0 auto;
-        }
-        .header h1 {
-            margin: 0;
-        }
-        .nav-links a {
-            color: white;
-            text-decoration: none;
-            margin-left: 20px;
-        }
-        .back-link {
-            display: inline-block;
-            margin-bottom: 20px;
-            color: rgb(22, 199, 96);
-            text-decoration: none;
-        }
-        .message-container {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        .farmer-info {
-            display: flex;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #eee;
-        }
-        .farmer-photo {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background-color: #e9e9e9;
-            margin-right: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #999;
-            font-size: 24px;
-        }
-        .farmer-details h2 {
-            margin: 0 0 5px 0;
-            color: rgb(22, 199, 96);
-        }
-        .conversation {
-            margin-bottom: 20px;
-            max-height: 400px;
-            overflow-y: auto;
-            padding: 15px;
-            background-color: #f9f9f9;
-            border-radius: 8px;
-        }
-        .message {
-            margin-bottom: 15px;
-            padding: 10px 15px;
-            border-radius: 8px;
-            max-width: 80%;
-        }
-        .message.sent {
-            background-color: rgb(22, 199, 96);
-            color: white;
-            margin-left: auto;
-        }
-        .message.received {
-            background-color: #e9e9e9;
-            margin-right: auto;
-        }
-        .message-time {
-            font-size: 12px;
-            color: #777;
-            margin-top: 5px;
-            text-align: right;
-        }
-        .message.sent .message-time {
-            color: rgba(255, 255, 255, 0.8);
-        }
-        .message-form {
-            display: flex;
-            gap: 10px;
-        }
-        .message-input {
-            flex: 1;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 16px;
-        }
-        .btn {
-            background: rgb(22, 199, 96);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        .listing-reference {
-            background-color: #f0f0f0;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-        .listing-reference h3 {
-            margin-top: 0;
-            color: rgb(22, 199, 96);
-        }
-        .error {
-            color: red;
-            margin-bottom: 10px;
-        }
-        .no-messages {
-            text-align: center;
-            color: #777;
-            padding: 20px;
-        }
-    </style>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <div class="header">
@@ -242,57 +103,123 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['message'])) {
             <div class="nav-links">
                 <a href="buyer-dashboard.php">Dashboard</a>
                 <a href="browse-listings.php">Browse Listings</a>
+                <a href="messages.php">Messages</a>
                 <a href="logout.php">Logout</a>
             </div>
         </div>
     </div>
 
     <div class="container">
-        <a href="<?php echo $listing ? 'listing-detail.php?id=' . $listing_id : 'browse-listings.php'; ?>" class="back-link">← Back</a>
+        <a href="<?php echo $listing_id ? 'listing-detail.php?id=' . $listing_id : 'messages.php'; ?>" class="back-link">
+            ← Back to <?php echo $listing_id ? 'listing' : 'messages'; ?>
+        </a>
         
-        <div class="message-container">
-            <div class="farmer-info">
-                <div class="farmer-photo">
-                    <?php echo strtoupper(substr($farmer['name'], 0, 1)); ?>
-                </div>
-                <div class="farmer-details">
-                    <h2><?php echo htmlspecialchars($farmer['name']); ?></h2>
-                    <p><?php echo htmlspecialchars($farmer['address']); ?></p>
-                </div>
-            </div>
-            
-            <?php if ($listing): ?>
-            <div class="listing-reference">
-                <h3>Regarding: <?php echo htmlspecialchars($listing['title']); ?></h3>
-                <p>Type: <?php echo htmlspecialchars($listing['rice_type']); ?></p>
-                <p>Price: Rs. <?php echo number_format($listing['price_per_kg'], 2); ?> per kg</p>
-            </div>
-            <?php endif; ?>
-            
-            <div class="conversation">
-                <?php if ($messages_result->num_rows > 0): ?>
-                    <?php while ($message = $messages_result->fetch_assoc()): ?>
-                        <div class="message <?php echo ($message['sent_by'] == 'buyer' && $message['buyer_id'] == $buyer_id) ? 'sent' : 'received'; ?>">
-                            <?php echo nl2br(htmlspecialchars($message['message'])); ?>
-                            <div class="message-time"><?php echo date('M d, Y h:i A', strtotime($message['created_at'])); ?></div>
-                        </div>
-                    <?php endwhile; ?>
-                <?php else: ?>
-                    <div class="no-messages">
-                        <p>Start a conversation with <?php echo htmlspecialchars($farmer['name']); ?></p>
-                    </div>
+        <div class="card">
+            <div class="card-header">
+                <h2>Message to <?php echo htmlspecialchars($farmer['name']); ?></h2>
+                <?php if ($listing): ?>
+                    <p>Regarding: <a href="listing-detail.php?id=<?php echo $listing['id']; ?>"><?php echo htmlspecialchars($listing['title']); ?></a></p>
                 <?php endif; ?>
             </div>
             
-            <?php if (!empty($message_error)): ?>
-                <div class="error"><?php echo $message_error; ?></div>
-            <?php endif; ?>
-            
-            <form method="post" class="message-form">
-                <textarea name="message" class="message-input" placeholder="Type your message here..." rows="3" required></textarea>
-                <button type="submit" class="btn">Send</button>
-            </form>
+            <div class="card-body">
+                <div class="message-container" style="box-shadow: none; padding: 0; height: auto;">
+                    <div class="chat-messages" id="chat-messages" style="max-height: 400px; margin-bottom: 20px; background-color: #f5f7f9;">
+                        <?php if ($messages_result->num_rows > 0): ?>
+                            <?php while ($message = $messages_result->fetch_assoc()): ?>
+                                <div class="message <?php echo ($message['sent_by'] == 'buyer') ? 'message-sent' : 'message-received'; ?>">
+                                    <?php if ($message['listing_id']): ?>
+                                        <?php 
+                                        // Get listing title
+                                        $list_query = "SELECT title FROM listings WHERE id = ?";
+                                        $stmt = $conn->prepare($list_query);
+                                        $stmt->bind_param("i", $message['listing_id']);
+                                        $stmt->execute();
+                                        $list_result = $stmt->get_result();
+                                        $list_data = $list_result->fetch_assoc();
+                                        ?>
+                                        <?php if ($list_data): ?>
+                                            <div style="font-size: 12px; margin-bottom: 5px; <?php echo ($message['sent_by'] == 'buyer') ? 'text-align: right;' : ''; ?>">
+                                                <a href="listing-detail.php?id=<?php echo $message['listing_id']; ?>" style="color: var(--primary-color);">
+                                                    Re: <?php echo htmlspecialchars($list_data['title']); ?>
+                                                </a>
+                                            </div>
+                                        <?php endif; ?>
+                                    <?php endif; ?>
+                                    
+                                    <?php echo nl2br(htmlspecialchars($message['message'])); ?>
+                                    
+                                    <div class="message-time">
+                                        <?php echo date('M d, g:i a', strtotime($message['created_at'])); ?>
+                                    </div>
+                                </div>
+                            <?php endwhile; ?>
+                        <?php else: ?>
+                            <div style="text-align: center; padding: 30px; color: var(--text-light);">
+                                <p>No previous messages. Start the conversation!</p>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                    
+                    <div class="chat-input" style="background-color: white; border-radius: 0 0 var(--border-radius) var(--border-radius);">
+                        <form method="POST" action="">
+                            <textarea name="message" placeholder="Type your message here..." required></textarea>
+                            <button type="submit" class="btn">Send</button>
+                            
+                            <?php if ($message_error): ?>
+                                <div class="error-msg" style="margin-top: 10px;"><?php echo $message_error; ?></div>
+                            <?php endif; ?>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card" style="margin-top: 20px;">
+            <div class="card-header">
+                <h3>Farmer Contact Information</h3>
+            </div>
+            <div class="card-body">
+                <div class="detail-item">
+                    <span class="detail-label">Name:</span> 
+                    <?php echo htmlspecialchars($farmer['name']); ?>
+                </div>
+                
+                <div class="detail-item">
+                    <span class="detail-label">Location:</span> 
+                    <?php echo htmlspecialchars($farmer['address']); ?>
+                </div>
+                
+                <div class="detail-item">
+                    <span class="detail-label">Phone:</span> 
+                    <?php echo htmlspecialchars($farmer['phone']); ?>
+                </div>
+                
+                <?php if (!empty($farmer['whatsapp'])): ?>
+                <div class="detail-item">
+                    <span class="detail-label">WhatsApp:</span> 
+                    <?php echo htmlspecialchars($farmer['whatsapp']); ?>
+                </div>
+                <?php endif; ?>
+                
+                <div class="detail-item">
+                    <span class="detail-label">Email:</span> 
+                    <a href="mailto:<?php echo htmlspecialchars($farmer['email']); ?>">
+                        <?php echo htmlspecialchars($farmer['email']); ?>
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
+    
+    <script>
+        // Scroll to bottom of chat on page load
+        window.onload = function() {
+            var chatMessages = document.getElementById('chat-messages');
+            if (chatMessages) {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+        };
+    </script>
 </body>
 </html> 

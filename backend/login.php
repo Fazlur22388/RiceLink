@@ -15,139 +15,53 @@ unset($_SESSION['login_error']);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: Arial, sans-serif;
-        }
-
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: rgb(47, 114, 34);
-        }
-
-        .login-box {
-            background-color: rgb(67, 138, 39);
-            padding: 30px;
-            width: 450px;
-            border-radius: 10px;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
-            text-align: center;
-        }
-
-        .login-box h2 {
-            color: white;
-            margin-bottom: 15px;
-        }
-
-        .role-selection {
-            display: flex;
-            justify-content: space-around;
-            margin-bottom: 20px;
-        }
-
-        .role-btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            background-color: #1A252F;
-            color: white;
-            font-size: 16px;
-        }
-
-        .role-btn:hover {
-            background-color: #273746;
-        }
-
-        .login-form {
-            display: none;
-            text-align: left;
-        }
-
-        .login-form label {
-            display: block;
-            color: #ECF0F1;
-            margin-top: 10px;
-        }
-
-        .login-form input {
-            width: 100%;
-            padding: 10px;
-            margin-top: 5px;
-            border: none;
-            border-radius: 5px;
-            background: #ECF0F1;
-        }
-
-        .login-form button {
-            width: 100%;
-            padding: 10px;
-            background-color: #1A252F;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            margin-top: 20px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-
-        .login-form button:hover {
-            background-color: #273746;
-        }
-
-        .error-msg {
-            color: #e74c3c;
-            margin-top: 10px;
-            text-align: center;
-        }
-    </style>
+    <title>Login - RiceLink</title>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 
 <body>
-
-    <div class="login-box">
-        <h2>Select Your Portal</h2>
+    <div class="auth-box">
+        <h2>Welcome to RiceLink</h2>
+        <p>Please select your user type to continue</p>
 
         <div class="role-selection">
-            <button class="role-btn" onclick="showLogin('farmer')">Farmer</button>
-            <button class="role-btn" onclick="showLogin('buyer')">Buyer</button>
+            <button class="btn btn-outline" onclick="showLogin('farmer')">Farmer</button>
+            <button class="btn btn-outline" onclick="showLogin('buyer')">Buyer</button>
         </div>
 
         <form action="login.php" method="POST" class="login-form" id="loginForm" style="display: <?php echo ($selectedRole ? 'block' : 'none'); ?>;">
-            <h3 id="roleTitle" style="color: white; text-align: center;">
-                <?php echo $selectedRole ? "Login as " . $selectedRole : ""; ?>
+            <h3 id="roleTitle" style="color: var(--primary-color); text-align: center; margin-bottom: 20px;">
+                <?php echo $selectedRole ? "Login as " . ucfirst($selectedRole) : ""; ?>
             </h3>
 
             <input type="hidden" id="role" name="role" value="<?php echo $selectedRole; ?>">
 
-            <label for="email">Email:</label>
-            <input type="text" id="email" name="email" value="<?php echo isset($_SESSION['entered_email']) ?
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" value="<?php echo isset($_SESSION['entered_email']) ?
                                                                     $_SESSION['entered_email'] : ''; ?>" required>
+            </div>
 
-            <label for="password">Password:</label>
-            <input type="password" id="password" name="password" required>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required>
+            </div>
 
-            <button type="submit" name="log">Login</button>
+            <button type="submit" name="log" class="btn btn-full">Login</button>
 
             <div class="error-msg">
                 <?php echo $errorMessage; ?>
             </div>
 
-            <p style="margin-top: 10px;"><a href="forgotpass.php">Forgot Password?</a></p>
+            <p style="margin-top: 20px;"><a href="forgotpass.php">Forgot Password?</a></p>
+            <p style="margin-top: 10px;">Don't have an account? <a href="register.php">Sign up</a></p>
         </form>
     </div>
 
     <script>
         function showLogin(role) {
             document.getElementById("loginForm").style.display = "block";
-            document.getElementById("roleTitle").innerText = "Login as " + role;
+            document.getElementById("roleTitle").innerText = "Login as " + role.charAt(0).toUpperCase() + role.slice(1);
             document.getElementById("role").value = role;
         }
 

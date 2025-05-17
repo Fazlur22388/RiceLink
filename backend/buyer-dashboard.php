@@ -49,80 +49,7 @@ $messages = $stmt->get_result();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Buyer Dashboard - RiceLink</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f5f5f5;
-        }
-        .container {
-            width: 90%;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .header {
-            background-color: rgb(22, 199, 96);
-            padding: 15px 0;
-            color: white;
-        }
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 90%;
-            margin: 0 auto;
-        }
-        .header h1 {
-            margin: 0;
-        }
-        .nav-links a {
-            color: white;
-            text-decoration: none;
-            margin-left: 20px;
-        }
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-        .dashboard-card {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        .dashboard-card h2 {
-            color: rgb(22, 199, 96);
-            margin-top: 0;
-        }
-        .listing-item {
-            border-bottom: 1px solid #eee;
-            padding: 10px 0;
-        }
-        .listing-item:last-child {
-            border-bottom: none;
-        }
-        .btn {
-            background: rgb(22, 199, 96);
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-            margin-top: 10px;
-        }
-        .welcome-banner {
-            background: linear-gradient(to right, rgb(22, 199, 96), #2ecc71);
-            color: white;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-    </style>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <div class="header">
@@ -130,66 +57,150 @@ $messages = $stmt->get_result();
             <h1>RiceLink</h1>
             <div class="nav-links">
                 <a href="browse-listings.php">Browse Listings</a>
+                <a href="messages.php">Messages</a>
                 <a href="logout.php">Logout</a>
             </div>
         </div>
     </div>
 
     <div class="container">
-        <div class="welcome-banner">
-            <h2>Welcome, <?php echo htmlspecialchars($buyer['name']); ?>!</h2>
-            <p>Find and connect with rice farmers across Sri Lanka.</p>
+        <div class="card" style="margin-bottom: 30px; background: var(--primary-color); color: white;">
+            <div class="card-body">
+                <h2 style="color: white; margin-bottom: 10px;">Welcome, <?php echo htmlspecialchars($buyer['name']); ?>!</h2>
+                <p>Find and connect with rice farmers across Sri Lanka.</p>
+            </div>
         </div>
 
-        <div class="dashboard-grid">
-            <div class="dashboard-card">
-                <h2>Recent Listings</h2>
+        <div class="dashboard-stats">
+            <div class="stat-card">
+                <div class="stat-label">New Listings</div>
+                <div class="stat-value"><?php echo $latest_listings->num_rows; ?></div>
+                <a href="browse-listings.php" class="btn btn-outline">Browse All</a>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-label">Bookmarks</div>
+                <div class="stat-value"><?php echo $bookmarked_listings->num_rows; ?></div>
+                <a href="browse-listings.php?filter=bookmarked" class="btn btn-outline">View Bookmarks</a>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-label">Messages</div>
+                <div class="stat-value"><?php echo $messages->num_rows; ?></div>
+                <a href="messages.php" class="btn btn-outline">Check Messages</a>
+            </div>
+        </div>
+
+        <div class="dashboard-section">
+            <h2>Recent Listings</h2>
+            <div class="listings-grid">
                 <?php if ($latest_listings->num_rows > 0): ?>
-                    <?php while ($listing = $latest_listings->fetch_assoc()): ?>
-                        <div class="listing-item">
-                            <h3><?php echo htmlspecialchars($listing['title']); ?></h3>
-                            <p>Type: <?php echo htmlspecialchars($listing['rice_type']); ?></p>
-                            <p>Price: Rs. <?php echo htmlspecialchars($listing['price_per_kg']); ?> per kg</p>
-                            <a href="listing-detail.php?id=<?php echo $listing['id']; ?>" class="btn">View Details</a>
+                    <?php 
+                    // Reset the result pointer to the beginning
+                    $latest_listings->data_seek(0);
+                    while ($listing = $latest_listings->fetch_assoc()): 
+                    ?>
+                        <div class="listing-card">
+                            <div class="listing-image">
+                                <?php if (!empty($listing['image_url'])): ?>
+                                    <img src="<?php echo htmlspecialchars($listing['image_url']); ?>" alt="Rice Image">
+                                <?php else: ?>
+                                    <div style="color: #999; font-size: 18px;">No image available</div>
+                                <?php endif; ?>
+                            </div>
+                            <div class="listing-details">
+                                <h3 class="listing-title"><?php echo htmlspecialchars($listing['title']); ?></h3>
+                                <div class="listing-meta">
+                                    <div class="listing-price">Rs. <?php echo number_format($listing['price_per_kg'], 2); ?>/kg</div>
+                                    <div class="listing-location"><?php echo htmlspecialchars($listing['rice_type']); ?></div>
+                                </div>
+                                <p><a href="listing-detail.php?id=<?php echo $listing['id']; ?>" class="btn">View Details</a></p>
+                            </div>
                         </div>
                     <?php endwhile; ?>
                 <?php else: ?>
-                    <p>No listings available at the moment.</p>
+                    <div class="card">
+                        <div class="card-body" style="text-align: center;">
+                            <p>No listings available at the moment.</p>
+                            <a href="browse-listings.php" class="btn">Refresh Listings</a>
+                        </div>
+                    </div>
                 <?php endif; ?>
-                <a href="browse-listings.php" class="btn">View All Listings</a>
             </div>
+        </div>
 
-            <div class="dashboard-card">
-                <h2>Bookmarked Listings</h2>
-                <?php if ($bookmarked_listings->num_rows > 0): ?>
-                    <?php while ($bookmark = $bookmarked_listings->fetch_assoc()): ?>
-                        <div class="listing-item">
-                            <h3><?php echo htmlspecialchars($bookmark['title']); ?></h3>
-                            <p>Type: <?php echo htmlspecialchars($bookmark['rice_type']); ?></p>
-                            <p>Price: Rs. <?php echo htmlspecialchars($bookmark['price_per_kg']); ?> per kg</p>
-                            <a href="listing-detail.php?id=<?php echo $bookmark['id']; ?>" class="btn">View Details</a>
+        <div class="dashboard-section">
+            <h2>Bookmarked Listings</h2>
+            <?php if ($bookmarked_listings->num_rows > 0): ?>
+                <div class="listings-grid">
+                    <?php 
+                    // Reset the result pointer to the beginning
+                    $bookmarked_listings->data_seek(0);
+                    while ($bookmark = $bookmarked_listings->fetch_assoc()): 
+                    ?>
+                        <div class="listing-card">
+                            <div class="listing-image">
+                                <?php if (!empty($bookmark['image_url'])): ?>
+                                    <img src="<?php echo htmlspecialchars($bookmark['image_url']); ?>" alt="Rice Image">
+                                <?php else: ?>
+                                    <div style="color: #999; font-size: 18px;">No image available</div>
+                                <?php endif; ?>
+                            </div>
+                            <div class="listing-details">
+                                <h3 class="listing-title"><?php echo htmlspecialchars($bookmark['title']); ?></h3>
+                                <div class="listing-meta">
+                                    <div class="listing-price">Rs. <?php echo number_format($bookmark['price_per_kg'], 2); ?>/kg</div>
+                                    <div class="listing-location"><?php echo htmlspecialchars($bookmark['rice_type']); ?></div>
+                                </div>
+                                <p><a href="listing-detail.php?id=<?php echo $bookmark['id']; ?>" class="btn">View Details</a></p>
+                            </div>
                         </div>
                     <?php endwhile; ?>
-                <?php else: ?>
-                    <p>You haven't bookmarked any listings yet.</p>
-                <?php endif; ?>
-            </div>
+                </div>
+            <?php else: ?>
+                <div class="card">
+                    <div class="card-body" style="text-align: center;">
+                        <p>You haven't bookmarked any listings yet.</p>
+                        <a href="browse-listings.php" class="btn">Browse Listings</a>
+                    </div>
+                </div>
+            <?php endif; ?>
+        </div>
 
-            <div class="dashboard-card">
-                <h2>Recent Messages</h2>
-                <?php if ($messages->num_rows > 0): ?>
-                    <?php while ($message = $messages->fetch_assoc()): ?>
-                        <div class="listing-item">
-                            <p><strong>From:</strong> <?php echo htmlspecialchars($message['farmer_name']); ?></p>
-                            <p><?php echo htmlspecialchars(substr($message['message'], 0, 50)); ?>...</p>
-                            <small><?php echo date('M d, Y', strtotime($message['created_at'])); ?></small>
+        <div class="dashboard-section">
+            <h2>Recent Messages</h2>
+            <?php if ($messages->num_rows > 0): ?>
+                <div class="card">
+                    <?php 
+                    // Reset the result pointer to the beginning
+                    $messages->data_seek(0);
+                    while ($message = $messages->fetch_assoc()): 
+                    ?>
+                        <div style="padding: 15px; border-bottom: 1px solid var(--border-color);">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <h3 style="margin: 0; font-size: 16px; color: var(--primary-color);">
+                                    <?php echo htmlspecialchars($message['farmer_name']); ?>
+                                </h3>
+                                <small style="color: var(--text-light);"><?php echo date('M d, Y', strtotime($message['created_at'])); ?></small>
+                            </div>
+                            <p style="margin: 10px 0;">
+                                <?php echo htmlspecialchars(substr($message['message'], 0, 100)); ?>
+                                <?php if (strlen($message['message']) > 100): ?>...<?php endif; ?>
+                            </p>
                         </div>
                     <?php endwhile; ?>
-                    <a href="messages.php" class="btn">View All Messages</a>
-                <?php else: ?>
-                    <p>No messages yet.</p>
-                <?php endif; ?>
-            </div>
+                    <div style="padding: 15px; text-align: center;">
+                        <a href="messages.php" class="btn">View All Messages</a>
+                    </div>
+                </div>
+            <?php else: ?>
+                <div class="card">
+                    <div class="card-body" style="text-align: center;">
+                        <p>No messages yet.</p>
+                        <a href="browse-listings.php" class="btn">Contact Farmers</a>
+                    </div>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 </body>
