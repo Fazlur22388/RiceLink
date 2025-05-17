@@ -158,8 +158,6 @@ unset($_SESSION['login_error']);
     </script>
     <?php 
 
-include('dbconnect.php');
-
 // Login Processing
 if (isset($_POST["log"])) {
     
@@ -171,9 +169,8 @@ if (isset($_POST["log"])) {
 
     // Role Mapping
     $roleTables = [
-        
-        "farmer"   => ["table" => "farmers", "id_col" => "id", "email_col" => "email", "password_col" => "password", "redirect" => "staff.php"],
-        "buyer" => ["table" => "buyers", "id_col" => "id", "email_col" => "email", "password_col" => "password", "redirect" => "../index.php"]
+        "farmer" => ["table" => "farmers", "id_col" => "id", "email_col" => "email", "password_col" => "password", "redirect" => "farmer-dashboard.php"],
+        "buyer" => ["table" => "buyers", "id_col" => "id", "email_col" => "email", "password_col" => "password", "redirect" => "buyer-dashboard.php"]
     ];
 
     if (array_key_exists($role, $roleTables)) {
@@ -182,9 +179,6 @@ if (isset($_POST["log"])) {
         $email_col = $roleTables[$role]['email_col'];
         $password_col = $roleTables[$role]['password_col'];
         $redirect_page = $roleTables[$role]['redirect'];
-
-        // Debugging SQL Query
-        
 
         // Prepare SQL Query
         $stmt = $conn->prepare("SELECT $id_col, $email_col, $password_col FROM $table WHERE $email_col = ?");
@@ -200,7 +194,22 @@ if (isset($_POST["log"])) {
 
             // Check if password is hashed
             if (password_verify($password, $storedPassword) || $password === $storedPassword) {
-                $_SESSION['id'] = $row[$id_col]; // Store correct user ID
+                // Set session variables based on role
+                if ($role == 'farmer') {
+                    $_SESSION['farmer_id'] = $row[$id_col];
+                    $_SESSION['role'] = 'farmer';
+
+                    header("Location: farmer-dashboard.php");
+                    exit();
+                } else if ($role == 'buyer') {
+                    $_SESSION['buyer_id'] = $row[$id_col];
+                    $_SESSION['role'] = 'buyer';
+
+                    header("Location: buyer-dashboard.php");
+                    exit();
+                }
+                
+                $_SESSION['id'] = $row[$id_col]; // General user ID
                 $_SESSION['email'] = $email;
                 $_SESSION['user_type'] = $role;
 
@@ -210,12 +219,18 @@ if (isset($_POST["log"])) {
             } 
             else {
                 $_SESSION['login_error'] = "Incorrect password.";
+                header("Location: login.php");
+                exit();
             }
         } else {
             $_SESSION['login_error'] = "User not found.";
+            header("Location: login.php");
+            exit();
         }
     } else {
         $_SESSION['login_error'] = "Invalid email or password";
+        header("Location: login.php");
+        exit();
     }
 }
 
