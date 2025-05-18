@@ -1,6 +1,6 @@
 <?php
 session_start();
-include('db_connect.php');
+include('../backend/db_connect.php');
 
 // Check if the user is logged in as a buyer
 if (!isset($_SESSION['buyer_id'])) {
