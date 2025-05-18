@@ -58,7 +58,7 @@ $messages = $stmt->get_result();
             <div class="nav-links">
                 <a href="browse-listings.php">Browse Listings</a>
                 <a href="messages.php">Messages</a>
-                <a href="logout.php">Logout</a>
+                <a href=".logout.php">Logout</a>
             </div>
         </div>
     </div>
