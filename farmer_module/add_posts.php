@@ -48,7 +48,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Add New Product</title>
+  <title>Add New Product | RiceLnk</title>
   <style>
     body {
       margin: 0;
@@ -164,9 +164,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
 
     .product-image {
-      width: 370px;
+      width: 500px;
       height: 260px;
-      border: 1px solid #5a5252;
+      border: 1px solid #696666;
       border-radius: 20px;
       padding: 10px;
       text-align: center;
@@ -350,17 +350,48 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
               <input
                 type="text"
                 name="product-type"
-                placeholder="Product Title" />
+                placeholder="Product Title" required/>
             </div>
 
             <div class="display-group">
               <div class="rice-variety">
-                <label for="farm-type">Rice variety / Type</label>
-                <select name="farm-type" id="farm-type">
-                  <option value="rice">Basmati Nadu</option>
-                  <option value="vegetable">Samba Red Rice</option>
-                  <option value="tea">Keeri Samba</option>
-                  <option value="fruit">Fruit Growers</option>
+                <label for="rice-type">Rice variety / Type</label>
+                <select name="rice-type" id="rice-type" required>
+                  <option value="">-- Select Rice Variety --</option>
+                  <option value="BG 300">BG 300</option>
+                  <option value="BG 352">BG 352</option>
+                  <option value="BG 358">BG 358</option>
+                  <option value="BG 366">BG 366</option>
+                  <option value="BG 379-2">BG 379-2</option>
+                  <option value="BG 407">BG 407</option>
+                  <option value="BG 450">BG 450</option>
+                  <option value="BG 94-1">BG 94-1</option>
+                  <option value="Bg 251">Bg 251</option>
+                  <option value="Bg 300">Bg 300</option>
+                  <option value="Bg 403">Bg 403</option>
+                  <option value="At 307">At 307</option>
+                  <option value="At 362">At 362</option>
+                  <option value="At 401">At 401</option>
+                  <option value="At 353">At 353</option>
+                  <option value="Suwandel">Suwandel</option>
+                  <option value="Pachchaperumal">Pachchaperumal</option>
+                  <option value="Kaluheenati">Kaluheenati</option>
+                  <option value="Ma-Wee">Ma-Wee</option>
+                  <option value="Kuruluthuda">Kuruluthuda</option>
+                  <option value="Madathawalu">Madathawalu</option>
+                  <option value="Gonabaru">Gonabaru</option>
+                  <option value="Rathdel">Rathdel</option>
+                  <option value="Dahanala">Dahanala</option>
+                  <option value="Hetada Wee">Hetada Wee</option>
+                  <option value="Kahawanu">Kahawanu</option>
+                  <option value="Murungakayan">Murungakayan</option>
+                  <option value="Kottiyaran">Kottiyaran</option>
+                  <option value="Godaheenati">Godaheenati</option>
+                  <option value="Keeri Samba">Keeri Samba</option>
+                  <option value="Samba">Samba</option>
+                  <option value="Nadu">Nadu</option>
+                  <option value="Red Raw Rice">Red Raw Rice</option>
+                  <option value="White Raw Rice">White Raw Rice</option>
                 </select>
               </div>
             </div>
@@ -369,20 +400,20 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
               <input
                 type="number"
                 name="quantity"
-                placeholder="Quantity Available (kg / ton)" />
+                placeholder="Quantity Available (kg)" required/>
             </div>
 
             <div class="display-group">
               <input
                 type="text"
                 name="price-per-unit"
-                placeholder="Price-Per-Unit" />
+                placeholder="Price-Per-Unit" required/>
             </div>
 
             <div class="display-group">
               <div class="harvest-date">
                 <label for="harvest-date">Harvest Date</label>
-                <input type="date" name="harvest-date" id="harvest-date" />
+                <input type="date" name="harvest-date" id="harvest-date" required/>
               </div>
             </div>
           </div>
@@ -401,7 +432,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 name="product_picture"
                 accept="image/*"
                 onchange="previewImage()"
-                hidden />
+                hidden required/>
               <p class="hint">
                 Set the product thumbnail image. Only *.png, *.jpg and *.jpeg
                 image files are accepted
@@ -421,7 +452,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 <input
                   type="text"
                   name="farm-address"
-                  placeholder="Location / Farm Address" />
+                  placeholder="Location / Farm Address" required/>
               </div>
 
               <div class="display-group">
@@ -441,7 +472,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
               <div class="display-group">
                 <div class="rice-disc">
                   <label for="description">Description</label>
-                  <textarea id="description"></textarea>
+                  <textarea id="description" required></textarea>
                 </div>
               </div>
             </div>
@@ -451,6 +482,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 <div class="moisture-level">
                   <label>Moisture Level</label>
                   <select name="moisture-level" id="moisture-level">
+                    <option value="">-- Select moisture-level --</option>
                     <option value="level-1">Below 12%</option>
                     <option value="level-2">12% - 14%</option>
                     <option value="level-3">14% - 16%</option>
@@ -464,6 +496,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 <div class="grain-size">
                   <label>Grain Size</label>
                   <select name="grain-size" id="grain-size">
+                    <option value="">-- Select grain-size --</option>
                     <option value="size-1">Small (<= 5.0mm)</option>
                     <option value="size-2">Medium (5.1 - 6.5mm)</option>
                     <option value="size-3">Long (6.6 - 7.5mm)</option>
@@ -478,7 +511,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 <input
                   type="text"
                   name="color-desc"
-                  placeholder="Color and Pleasant Description" />
+                  placeholder="Color and Pleasant Description" required/>
               </div>
             </div>
           </div>
