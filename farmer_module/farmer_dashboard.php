@@ -1,6 +1,11 @@
 <?php
 session_start();
-include("db_connect.php");
+include('../backend/db_connect.php');
+
+if (!isset($_SESSION['farmer_id'])) {
+    header("Location: login.php");
+    exit();
+}
 
 $user_id = $_SESSION['farmer_id'];
 
@@ -11,27 +16,27 @@ $user = mysqli_fetch_assoc($result_user);
 $name = $user['name'];
 $profile_picture = $user['profile_picture'];
 
-$query_posts = "SELECT * FROM rice_posts WHERE farmer_id = $user_id ORDER BY id DESC";
+$query_posts = "SELECT * FROM listings WHERE id = $user_id ORDER BY id DESC";
 $posts_result = mysqli_query($conn, $query_posts);
 
 $query_farmers = "SELECT id, name, profile_picture FROM farmers WHERE id != $user_id";
 $other_farmers_result = mysqli_query($conn, $query_farmers);
 
 // Fetch WhatsApp messages for this farmer (simulate from a table `messages`)
-$query_messages = "SELECT m.content, m.timestamp, f.name AS sender_name, f.profile_picture AS sender_pic, f.phone 
-                   FROM messages m
-                   JOIN farmers f ON m.sender_id = f.id
-                   WHERE m.receiver_id = $user_id
-                   ORDER BY m.timestamp DESC";
+$query_messages = "SELECT m.message AS content, m.created_at AS timestamp, b.name AS sender_name, b.phone
+                  FROM messages m
+                  JOIN buyers b ON m.buyer_id = b.id
+                   WHERE m.farmer_id = $user_id
+                   ORDER BY m.created_at DESC";
 $messages_result = mysqli_query($conn, $query_messages);
 
-$query_active_posts = "SELECT COUNT(*) AS total FROM rice_posts WHERE farmer_id = $user_id";
+$query_active_posts = "SELECT COUNT(*) AS total FROM listings WHERE farmer_id = $user_id";
 $query_buyers = "SELECT COUNT(DISTINCT buyer_id) AS total FROM inquiries WHERE farmer_id = $user_id";
-$query_views = "SELECT SUM(views) AS total FROM rice_posts WHERE farmer_id = $user_id";
+$query_views = "SELECT SUM(views) AS total FROM listings WHERE farmer_id = $user_id";
 
 $active_posts_count = mysqli_fetch_assoc(mysqli_query($conn, $query_active_posts))['total'];
-$total_buyers = mysqli_fetch_assoc(mysqli_query($conn, $query_buyers))['total'];
-$total_views = mysqli_fetch_assoc(mysqli_query($conn, $query_views))['total'];
+//$total_buyers = mysqli_fetch_assoc(mysqli_query($conn, $query_buyers))['total'];
+//$total_views = mysqli_fetch_assoc(mysqli_query($conn, $query_views))['total'];
 ?>
 
 

@@ -1,6 +1,6 @@
 <?php
 session_start();
-include 'db_connection.php'; // Include your DB connection
+include('../backend/db_connect.php'); // Include your DB connection
 
 if (!isset($_GET['post_id'])) {
     header("Location: farmer_dashboard.php");

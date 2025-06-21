@@ -1,6 +1,6 @@
 <?php
 session_start();
-require 'db_connect.php';
+require ('../backend/db_connect.php');
 
 $farmer_id = $_SESSION['farmer_id'] ?? null;
 if (!$farmer_id) {

@@ -1,5 +1,5 @@
 <?php
-include "db_connect.php";
+include('../backend/db_connect.php');
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
   $title = $_POST['product-type'];
