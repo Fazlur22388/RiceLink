@@ -319,6 +319,38 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
       float: right;
       margin-right: 50px;
     }
+
+    .availability{
+      margin-top: 12px;
+    }
+
+    .sec-3 p{
+      text-align: center;
+    }
+
+    /* .price-info{
+      border: 1px solid rgb(133, 132, 132);
+      padding: 10px;
+      border-radius: 20px;
+      width: 700px;
+      margin-left: 400px;
+      background-color: #46a064;
+      /* color: white; 
+    }*/
+
+    /* .dtls {
+      display: flex;
+      gap: 280px;
+      font-weight: bolder;
+      color: white;
+      
+    }
+
+    .dtls h3{
+      margin-left: 20px;
+      text-transform: uppercase;
+      font-size: 15px;
+    } */ 
   </style>
 </head>
 
@@ -358,40 +390,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 <label for="rice-type">Rice variety / Type</label>
                 <select name="rice-type" id="rice-type" required>
                   <option value="">-- Select Rice Variety --</option>
-                  <option value="BG 300">BG 300</option>
-                  <option value="BG 352">BG 352</option>
-                  <option value="BG 358">BG 358</option>
-                  <option value="BG 366">BG 366</option>
-                  <option value="BG 379-2">BG 379-2</option>
-                  <option value="BG 407">BG 407</option>
-                  <option value="BG 450">BG 450</option>
-                  <option value="BG 94-1">BG 94-1</option>
-                  <option value="Bg 251">Bg 251</option>
-                  <option value="Bg 300">Bg 300</option>
-                  <option value="Bg 403">Bg 403</option>
-                  <option value="At 307">At 307</option>
-                  <option value="At 362">At 362</option>
-                  <option value="At 401">At 401</option>
-                  <option value="At 353">At 353</option>
-                  <option value="Suwandel">Suwandel</option>
-                  <option value="Pachchaperumal">Pachchaperumal</option>
-                  <option value="Kaluheenati">Kaluheenati</option>
-                  <option value="Ma-Wee">Ma-Wee</option>
-                  <option value="Kuruluthuda">Kuruluthuda</option>
-                  <option value="Madathawalu">Madathawalu</option>
-                  <option value="Gonabaru">Gonabaru</option>
-                  <option value="Rathdel">Rathdel</option>
-                  <option value="Dahanala">Dahanala</option>
-                  <option value="Hetada Wee">Hetada Wee</option>
-                  <option value="Kahawanu">Kahawanu</option>
-                  <option value="Murungakayan">Murungakayan</option>
-                  <option value="Kottiyaran">Kottiyaran</option>
-                  <option value="Godaheenati">Godaheenati</option>
                   <option value="Keeri Samba">Keeri Samba</option>
                   <option value="Samba">Samba</option>
                   <option value="Nadu">Nadu</option>
-                  <option value="Red Raw Rice">Red Raw Rice</option>
                   <option value="White Raw Rice">White Raw Rice</option>
+                  <option value="Red Raw Rice">Red Raw Rice</option>
+                  <option value="Suwandel">Suwandel</option>
+                  <option value="Kalu Heenati">Kalu Heenati</option>
                 </select>
               </div>
             </div>
@@ -476,47 +481,43 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 </div>
               </div>
             </div>
-
             <div class="box-1">
               <div class="display-group">
-                <div class="moisture-level">
-                  <label>Moisture Level</label>
-                  <select name="moisture-level" id="moisture-level">
-                    <option value="">-- Select moisture-level --</option>
-                    <option value="level-1">Below 12%</option>
-                    <option value="level-2">12% - 14%</option>
-                    <option value="level-3">14% - 16%</option>
-                    <option value="level-4">16% - 18%</option>
-                    <option value="level-5">Above 18%</option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="display-group">
-                <div class="grain-size">
-                  <label>Grain Size</label>
-                  <select name="grain-size" id="grain-size">
-                    <option value="">-- Select grain-size --</option>
-                    <option value="size-1">Small (<= 5.0mm)</option>
-                    <option value="size-2">Medium (5.1 - 6.5mm)</option>
-                    <option value="size-3">Long (6.6 - 7.5mm)</option>
-                    <option value="size-4">Extra Long (>= 7.6mm)</option>
-                  </select>
+                <div class="harvest-date">
+                  <label for="created-at">Created At</label>
+                  <input type="date" id="created-at">
                 </div>
               </div>
             </div>
-
             <div class="box-1">
               <div class="display-group">
-                <input
-                  type="text"
-                  name="color-desc"
-                  placeholder="Color and Pleasant Description" required/>
+                <div class="harvest-date">
+                  <label for="updated-at">Updated At</label>
+                  <input type="date" id="updated-at">
+                </div>
+              </div>
+            </div>
+            <div class="box-1">
+              <div class="display-group">
+                <div class="availability">
+                  <label for="availability">Available</label>
+                  <input type="checkbox" id="availability">
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      <!-- <div class="sec-3">
+          <p>Maximum wholesale Price</p>
+          <div class="price-info">
+            <div class="dtls">
+              <h3>Rice Veriety</h3>
+              <h3>Price per Unit (Kg)</h3>
+            </div>
+          </div>
+        </div> -->
     </form>
   </div>
 
