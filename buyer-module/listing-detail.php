@@ -88,7 +88,7 @@ if (isset($_POST['bookmark_action'])) {
         <div class="listing-container">
             <div class="listing-image">
                 <?php if (!empty($listing['image_url'])): ?>
-                    <img src="<?php echo htmlspecialchars($listing['image_url']); ?>" alt="Rice Image">
+                    <img src="../<?php echo htmlspecialchars($listing['image_url']); ?>" alt="Rice Image">
                 <?php else: ?>
                     <div style="color: #999; font-size: 18px;">No image available</div>
                 <?php endif; ?>

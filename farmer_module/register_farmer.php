@@ -1,6 +1,6 @@
 <?php
 session_start();
-include('db_connect.php');
+include('../backend/db_connect.php');
 
 $errors = [];
 $created_at = date("Y-m-d H:i:s");

@@ -59,10 +59,99 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <html>
 <head>
     <title>Register</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buyer Login - RiceLink</title>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <h2>Buyer Registration</h2>
-
+    <style>
+        body {
+            background: #4CAF50;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+        h2 {
+            text-align: center;
+            color: #fff;
+            margin-top: 40px;
+            margin-bottom: 20px;
+        }
+        form {
+            background: #fff;
+            max-width: 400px;
+            margin: 30px auto 0 auto;
+            padding: 30px 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+            display: flex;
+            flex-direction: column;
+            gap: px;
+        }
+        label {
+            font-weight: bold;
+            margin-bottom: 4px;
+            color: #333;
+        }
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        select {
+            width: 100%;
+            padding: 8px 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 15px;
+            background: #f9f9f9;
+            transition: border 0.2s;
+        }
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="password"]:focus,
+        select:focus {
+            border: 1.5px solid #4CAF50;
+            outline: none;
+        }
+        input[type="file"] {
+            margin-bottom: 10px;
+        }
+        button[type="submit"] {
+            background: #4CAF50;
+            color: #fff;
+            border: none;
+            padding: 12px;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button[type="submit"]:hover {
+            background: #388e3c;
+        }
+        div[style*="color:red"] {
+            background: #ffeaea;
+            border: 1px solid #ffb3b3;
+            color: #d32f2f !important;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        div[style*="color:green"] {
+            background: #eaffea;
+            border: 1px solid #b3ffb3;
+            color: #388e3c !important;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+    </style>
     <?php if (!empty($errors)): ?>
         <div style="color:red;">
             <?= implode('<br>', $errors); ?>

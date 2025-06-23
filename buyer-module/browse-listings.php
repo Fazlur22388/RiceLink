@@ -151,7 +151,7 @@ $locations_result = $conn->query($locations_query);
                     <div class="listing-card">
                         <div class="listing-image">
                             <?php if (!empty($listing['image_url'])): ?>
-                                <img src="<?php echo htmlspecialchars($listing['image_url']); ?>" alt="Rice Image">
+                                <img src="../<?php echo htmlspecialchars($listing['image_url']); ?>" alt="Rice Image">
                             <?php else: ?>
                                 <div style="color: #999; font-size: 18px;">No image available</div>
                             <?php endif; ?>

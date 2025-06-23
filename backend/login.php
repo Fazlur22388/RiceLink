@@ -172,8 +172,8 @@ if (isset($_POST["log"])) {
     // Role Mapping
     $roleTables = [
         
-        "farmer"   => ["table" => "farmers", "id_col" => "id", "email_col" => "email", "password_col" => "password", "redirect" => "staff.php"],
-        "buyer" => ["table" => "buyers", "id_col" => "id", "email_col" => "email", "password_col" => "password", "redirect" => "../index.php"]
+        "farmer"   => ["table" => "farmers", "id_col" => "id", "email_col" => "email", "password_col" => "password", "redirect" => "../farmer_module/farmer_dashboard.php"],
+        "buyer" => ["table" => "buyers", "id_col" => "id", "email_col" => "email", "password_col" => "password", "redirect" => "../buyer-module/buyer-dashboard.php"]
     ];
 
     if (array_key_exists($role, $roleTables)) {

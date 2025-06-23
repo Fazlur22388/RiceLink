@@ -58,7 +58,12 @@ $messages = $stmt->get_result();
             <div class="nav-links">
                 <a href="browse-listings.php">Browse Listings</a>
                 <a href="messages.php">Messages</a>
-                <a href=".logout.php">Logout</a>
+                <a href="../backend/logout.php" onclick="return confirmLogout();" class="btn-logout">Logout</a>
+                <script>
+                function confirmLogout() {
+                     return confirm("Are you sure you want to logout?");
+                     }
+                </script>
             </div>
         </div>
     </div>
@@ -103,7 +108,7 @@ $messages = $stmt->get_result();
                         <div class="listing-card">
                             <div class="listing-image">
                                 <?php if (!empty($listing['image_url'])): ?>
-                                    <img src="<?php echo htmlspecialchars($listing['image_url']); ?>" alt="Rice Image">
+                                    <img src="../<?php echo htmlspecialchars($listing['image_url']); ?>" alt="Rice Image">
                                 <?php else: ?>
                                     <div style="color: #999; font-size: 18px;">No image available</div>
                                 <?php endif; ?>

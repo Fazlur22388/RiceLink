@@ -16,7 +16,7 @@ $user = mysqli_fetch_assoc($result_user);
 $name = $user['name'];
 $profile_picture = $user['profile_picture'];
 
-$query_posts = "SELECT * FROM listings WHERE id = $user_id ORDER BY id DESC";
+$query_posts = "SELECT * FROM listings WHERE farmer_id = $user_id ORDER BY id DESC";
 $posts_result = mysqli_query($conn, $query_posts);
 
 $query_farmers = "SELECT id, name, profile_picture FROM farmers WHERE id != $user_id";
@@ -314,6 +314,7 @@ $active_posts_count = mysqli_fetch_assoc(mysqli_query($conn, $query_active_posts
 </head>
 
 <body>
+  <div id="google_translate_element" style="float:right; margin: 10px;"></div>
   <div class="sidebar">
     <h2>RiceLink</h2>
     <nav>
@@ -340,14 +341,7 @@ $active_posts_count = mysqli_fetch_assoc(mysqli_query($conn, $query_active_posts
         <h3>Active Posts</h3>
         <p><?= $active_posts_count ?></p>
       </div>
-      <div class="stat-box">
-        <h3>Interested Buyers</h3>
-        <p><?= $total_buyers ?></p>
-      </div>
-      <div class="stat-box">
-        <h3>Views</h3>
-        <p><?= $total_views ?></p>
-      </div>
+      
     </div>
 
     <form method="get" action="add_posts.php">
@@ -355,23 +349,24 @@ $active_posts_count = mysqli_fetch_assoc(mysqli_query($conn, $query_active_posts
     </form>
 
     <section class="section">
-      <h2>My Posts</h2>
-      <div class="post-grid">
-        <?php while ($post = mysqli_fetch_assoc($posts_result)) { ?>
-          <div class="post">
-            <img src="<?= htmlspecialchars($post['image']) ?>" alt="Rice" />
-            <h3><?= htmlspecialchars($post['type']) ?></h3>
-            <p><?= htmlspecialchars($post['quantity_kg']) ?> kg</p>
-            <p>Rs <?= number_format($post['price'], 2) ?></p>
-            <div class="actions">
-              <a href="edit_post.php?id=<?= $post['id'] ?>">Edit</a>
-              <a href="delete_post.php?id=<?= $post['id'] ?>"
-                onclick="return confirm('Are you sure you want to delete this post?')">Delete</a>
-            </div>
-          </div>
-        <?php } ?>
+  <h2>My Posts</h2>
+  <div class="post-grid">
+    <?php while ($post = mysqli_fetch_assoc($posts_result)) { ?>
+      <div class="post">
+        <img src="../<?php echo htmlspecialchars($post['image_url']); ?>" alt="Rice Image">
+        <h3><?= htmlspecialchars($post['title']) ?></h3>
+        <p><?= htmlspecialchars($post['quantity']) ?> kg</p>
+        <p>Rs <?= number_format($post['price_per_kg'], 2) ?> per kg</p>
+        <div class="actions">
+          <a href="edit_post.php?id=<?= $post['id'] ?>">Edit</a>
+          <a href="delete_post.php?id=<?= $post['id'] ?>"
+            onclick="return confirm('Are you sure you want to delete this post?')">Delete</a>
+        </div>
       </div>
-    </section>
+    <?php } ?>
+  </div>
+</section>
+
 
     <div class="flex-sections">
       <section class="section farmers-section">
@@ -392,7 +387,7 @@ $active_posts_count = mysqli_fetch_assoc(mysqli_query($conn, $query_active_posts
           <?php while ($msg = mysqli_fetch_assoc($messages_result)) { ?>
             <div class="message-card">
               <div class="msg-header">
-                <img src="uploads/<?= htmlspecialchars($msg['sender_pic']) ?>" alt="Sender" />
+                <img src="uploads/<?= htmlspecialchars($msg['profile_pic']) ?>" alt="Sender" />
                 <div>
                   <strong><?= htmlspecialchars($msg['sender_name']) ?></strong><br />
                   <span><?= htmlspecialchars($msg['timestamp']) ?></span>
@@ -408,7 +403,20 @@ $active_posts_count = mysqli_fetch_assoc(mysqli_query($conn, $query_active_posts
       </section>
     </div>
   </main>
+  <script type="text/javascript">
+  function googleTranslateElementInit() {
+    new google.translate.TranslateElement({
+      pageLanguage: 'en',
+      includedLanguages: 'en,si,ta',
+      layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+    }, 'google_translate_element');
+  }
+</script>
+<script type="text/javascript"
+  src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit">
+</script>
 </body>
+
 
 <script>
   function previewProfilePic(event) {

@@ -1,45 +1,60 @@
 <?php
+session_start();
 include('../backend/db_connect.php');
 
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
-  $title = $_POST['product-type'];
-  $variety = $_POST['farm-type'];
-  $quantity = $_POST['quantity'];
-  $price = $_POST['price-per-unit'];
-  $harvest_date = $_POST['harvest-date'];
-  $address = $_POST['farm-address'];
-  $description = $_POST['description'] ?? '';
-  $moisture = $_POST['moisture-level'];
-  $grain_size = $_POST['grain-size'];
-  $color_desc = $_POST['color-desc'];
-
-  // Handle Product Image
-  $product_img_name = $_FILES['product_picture']['name'];
-  $product_img_tmp = $_FILES['product_picture']['tmp_name'];
-  $product_img_path = "uploads/" . basename($product_img_name);
-  move_uploaded_file($product_img_tmp, $product_img_path);
-
-  // Handle Certification File
-  $cert_file_name = $_FILES['Certification']['name'];
-  $cert_file_tmp = $_FILES['Certification']['tmp_name'];
-  $cert_file_path = "uploads/" . basename($cert_file_name);
-  move_uploaded_file($cert_file_tmp, $cert_file_path);
-
-  $sql = "INSERT INTO rice_posts 
-        (title, variety, quantity, price, harvest_date, image, address, certification, description, moisture_level, grain_size, color_desc)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-
-  $stmt = $conn->prepare($sql);
-  $stmt->bind_param("sssdssssssss", $title, $variety, $quantity, $price, $harvest_date, $product_img_path, $address, $cert_file_path, $description, $moisture, $grain_size, $color_desc);
-
-  if ($stmt->execute()) {
-    header("Location: farmer_dashboard.php?msg=success");
+// Ensure the farmer is logged in
+if (!isset($_SESSION['farmer_id'])) {
+    header("Location: ../login.php");
     exit();
-  } else {
-    echo "Error: " . $conn->error;
-  }
+}
+
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    $farmer_id = $_SESSION['farmer_id'];
+    $title = trim($_POST['product-type']);
+    $rice_type = trim($_POST['rice-type']);
+    $quantity = floatval($_POST['quantity']);
+    $price_per_kg = floatval($_POST['price-per-unit']);
+    $harvest_date = $_POST['harvest-date'];
+    $address = trim($_POST['farm-address']);
+    $description = trim($_POST['description']);
+    $is_available = 1; // default value, always available on insert
+
+    
+    // Handle product image upload
+$image_url = "";
+$uploadDir = __DIR__ . '/../product_pics/';
+$relativePath = 'product_pics/';
+
+if (!is_dir($uploadDir)) {
+    mkdir($uploadDir, 0777, true);
+}
+
+$fileName = time() . '_' . basename($_FILES['product_picture']['name']);
+$uploadPath = $uploadDir . $fileName;
+
+if (move_uploaded_file($_FILES['product_picture']['tmp_name'], $uploadPath)) {
+    $image_url = $relativePath . $fileName;  // Save full relative path for dashboard
+} else {
+    echo "Image upload failed.";
+    exit();
+}
+
+    // Prepare and execute SQL query
+    $sql = "INSERT INTO listings (farmer_id, title, description, rice_type, quantity, price_per_kg, harvest_date, image_url, is_available) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("isssddssi", $farmer_id, $title, $description, $rice_type, $quantity, $price_per_kg, $harvest_date, $image_url, $is_available);
+
+    if ($stmt->execute()) {
+        header("Location: farmer_dashboard.php?msg=success");
+        exit();
+    } else {
+        echo "Error: " . $stmt->error;
+    }
 }
 ?>
+
 
 
 <!DOCTYPE html>
@@ -369,11 +384,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
   </div>
 
   <div class="main-container">
-    <div class="btn">
-      <button type="submit" onclick="window.location.href='farmer_dashboard.php'">Submit</button>
+    
+    <form action="add_posts.php" method="POST" enctype="multipart/form-data">
+      <div class="btn">
+      <button type="submit" >Submit</button>
       <button onclick="window.location.href='farmer_dashboard.php'">Cancel</button>
     </div>
-    <form action="add_post.php" method="POST" enctype="multipart/form-data">
       <p>Basic Rice Information</p>
       <div class="rice-info">
         <div class="box-1">
@@ -460,12 +476,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                   placeholder="Location / Farm Address" required/>
               </div>
 
-              <div class="display-group">
-                <div class="certification">
-                  <label>Organic Certification</label>
-                  <input type="file" name="Certification" />
-                </div>
-              </div>
+              
             </div>
           </div>
         </div>
@@ -477,7 +488,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
               <div class="display-group">
                 <div class="rice-disc">
                   <label for="description">Description</label>
-                  <textarea id="description" required></textarea>
+                  <textarea id="description" name="description" required></textarea>
+
                 </div>
               </div>
             </div>
@@ -497,14 +509,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 </div>
               </div>
             </div>
-            <div class="box-1">
-              <div class="display-group">
-                <div class="availability">
-                  <label for="availability">Available</label>
-                  <input type="checkbox" id="availability">
-                </div>
-              </div>
-            </div>
+            
           </div>
         </div>
       </div>
