@@ -1,6 +1,6 @@
 <?php
 session_start();
-include('db_connect.php');
+include('../backend/db_connect.php');
 
 $errors = [];
 $created_at = date("Y-m-d H:i:s");
@@ -171,6 +171,17 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
       outline: none;
     }
 
+    select {
+      border: none;
+      width: 100%;
+      border: none;
+      border-bottom: 1px solid #ccc;
+      padding: 20px 0 8px;
+      font-size: 12px;
+      text-transform: uppercase;
+      outline: none;
+    }
+    
     .container-1 {
       display: flex;
       width: 100%;
@@ -568,7 +579,7 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
           <h1>Please Upload Your Profile Picture<br />here!</h1>
 
           <label for="profile-upload" class="upload-circle" id="upload-label">
-            <span class="plus">+</span>
+            <span class="plus" id="plus-icon">+</span>
           </label>
           <input
             type="file"
