@@ -3,224 +3,203 @@ session_start();
 include('../backend/db_connect.php');
 error_reporting(0);
 
-// Capture previous values if login fails
-$errorMessage = isset($_SESSION['login_error']) ? $_SESSION['login_error'] : "";
-unset($_SESSION['login_error']);
+// Handle form submission
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["log"])) {
+    $email = trim($_POST["email"]);
+    $password = trim($_POST["password"]);
+
+    $stmt = $conn->prepare("SELECT id, email, password FROM farmers WHERE email = ?");
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+    $stmt->close();
+
+    if ($row) {
+        $storedPassword = $row['password'];
+        if (password_verify($password, $storedPassword) || $password === $storedPassword) {
+            $_SESSION['farmer_id'] = $row['id'];
+            $_SESSION['role'] = 'farmer';
+            header("Location: farmer_dashboard.php");
+            exit();
+        } else {
+            $_SESSION['login_error'] = "Incorrect password.";
+        }
+    } else {
+        $_SESSION['login_error'] = "User not found.";
+    }
+
+    // Redirect back to login with error
+    header("Location: login.php");
+    exit();
+}
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Buyer Login - RiceLink</title>
-    <link rel="stylesheet" href="css/style.css">
-</head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Farmer Login | RiceLink</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Buyer Login - RiceLink</title>
-    <link rel="stylesheet" href="css/style.css">
-    <style>
-        body {
-            background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%);
-            min-height: 100vh;
-            margin: 0;
-            font-family: 'Segoe UI', Arial, sans-serif;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .auth-box {
-            background: #fff;
-            border-radius: 16px;
-            box-shadow: 0 8px 32px rgba(44, 62, 80, 0.15);
-            padding: 40px 32px 32px 32px;
-            max-width: 370px;
-            width: 100%;
-            margin: 40px 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .auth-box h2 {
-            margin-bottom: 8px;
-            color: #388E3C;
-            font-weight: 700;
-        }
-        .auth-box p {
-            margin-bottom: 24px;
-            color: #555;
-        }
-        .login-form {
-            width: 100%;
-        }
-        .form-group {
-            margin-bottom: 18px;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 6px;
-            color: #333;
-            font-size: 15px;
-        }
-        .form-group input {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #cfd8dc;
-            border-radius: 6px;
-            font-size: 15px;
-            background: #f9f9f9;
-            transition: border 0.2s;
-        }
-        .form-group input:focus {
-            border-color: #4CAF50;
-            outline: none;
-            background: #fff;
-        }
-        .btn {
-            width: 100%;
-            padding: 12px 0;
-            background: #4CAF50;
-            color: #fff;
-            border: none;
-            border-radius: 6px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .btn:hover {
-            background: #388E3C;
-        }
-        .error-msg {
-            color: #d32f2f;
-            background: #ffebee;
-            border: 1px solid #ffcdd2;
-            border-radius: 4px;
-            padding: 8px 12px;
-            margin: 16px 0 0 0;
-            font-size: 14px;
-            text-align: center;
-            min-height: 20px;
-        }
-        a {
-            color: #388E3C;
-            text-decoration: none;
-            transition: color 0.2s;
-        }
-        a:hover {
-            color: #2e7031;
-            text-decoration: underline;
-        }
-        @media (max-width: 480px) {
-            .auth-box {
-                padding: 24px 8px 16px 8px;
-                max-width: 98vw;
-            }
-        }
-    </style>
+    body {
+      height: 100vh;
+      overflow-y: hidden;
+      font-family: Arial, sans-serif;
+    }
+
+    .container {
+      display: flex;
+      width: 100%;
+    }
+
+    .left-end {
+      width: 40%;
+      background: url(images/8.jpg) no-repeat;
+      background-size: cover;
+      min-height: 100vh;
+    }
+
+    .content {
+      background-color: rgba(255, 255, 255, 0.5);
+      border-radius: 20px;
+      width: 400px;
+      margin: 250px auto;
+      text-align: center;
+    }
+
+    .content h1 {
+      padding-top: 15px;
+      font-size: 34px;
+      padding-bottom: 15px;
+      font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande",
+        "Lucida Sans", Arial, sans-serif;
+    }
+
+    .content p {
+      font-size: 15px;
+    }
+
+    .btn-signup {
+      margin-top: 30px;
+      padding: 10px 20px;
+      border-radius: 25px;
+      background-color: #201905;
+      border: none;
+      color: white;
+      margin-bottom: 10px;
+      cursor: pointer;
+    }
+
+    .btn-signup:hover {
+      background-color: #58450f;
+    }
+
+    input {
+      width: 100%;
+      border: none;
+      border-bottom: 1px solid #ccc;
+      padding: 50px 0 8px;
+      font-size: 12px;
+      text-transform: uppercase;
+      outline: none;
+    }
+
+    .right-end {
+      width: 100%;
+    }
+
+    .right-end h1 {
+      margin: 180px auto 10px 280px;
+      font-size: 30px;
+      font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande",
+        "Lucida Sans", Arial, sans-serif;
+    }
+
+    .subheading {
+      font-size: 15px;
+      color: #555;
+      margin: auto 180px 40px;
+    }
+
+    .signin-container {
+      margin-left: 120px;
+      margin-right: 100px;
+    }
+
+    .btn-signin {
+      margin-top: 50px;
+      padding: 10px 20px;
+      border-radius: 25px;
+      background-color: #201905;
+      border: none;
+      color: white;
+      margin-left: 650px;
+      cursor: pointer;
+    }
+
+    .btn-signin:hover {
+      background-color: #58450f;
+    }
+
+    .box {
+      margin-top: 20px;
+    }
+
+    .error-message {
+      text-align: center;
+      color: red;
+      font-size: 14px;
+      margin-top: 10px;
+    }
+  </style>
 </head>
 
 <body>
-    <!-- Google Translate element (e.g., in your navbar or header) -->
-<div id="google_translate_element" style="float:right; margin: 10px;"></div>
+<div class="container">
+  <div class="left-end">
+    <div class="content">
+      <h1>Welcome Back!</h1>
+      <p>Don't have an account? Sign Up here</p>
+      <button class="btn-signup" onclick="window.location.href='register_farmer.php';">
+        Sign Up
+      </button>
+    </div>
+  </div>
 
-    <div class="auth-box">
-        <h2>Welcome to RiceLink</h2>
-        <p>Farmer Login</p>
-
-        <form action="login.php" method="POST" class="login-form" id="loginForm">
-            <h3 style="color: var(--primary-color, #388E3C); text-align: center; margin-bottom: 20px;">
-                Login as Farmer
-            </h3>
-
-            <input type="hidden" name="role" value="farmer">
-
-            <div class="form-group">
-                <label for="email">Email Address</label>
-                <input type="email" id="email" name="email" value="<?php echo isset($_SESSION['entered_email']) ?
-                                                                    $_SESSION['entered_email'] : ''; ?>" required>
-            </div>
-
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" name="password" required>
-            </div>
-
-            <button type="submit" name="log" class="btn btn-full">Login</button>
-
-            <div class="error-msg">
-                <?php echo $errorMessage; ?>
-            </div>
-
-            <p style="margin-top: 20px;"><a href="forgotpass.php">Forgot Password?</a></p>
-            <p style="margin-top: 10px;">Don't have an account? <a href="register_farmer.php">Sign up</a></p>
-        </form>
+  <form id="signinForm" method="POST" enctype="multipart/form-data">
+    <div class="right-end">
+      <h1>Login to your Account</h1>
+      <p class="subheading">
+        Join RiceLink to access farmer dashboard and manage your rice posts easily.
+      </p>
     </div>
 
-    <?php
-    // Login Processing
-    if (isset($_POST["log"])) {
-        $_SESSION['entered_email'] = trim($_POST["email"]);
-        $email = trim($_POST["email"]);
-        $password = trim($_POST["password"]);
-        
-        // Query the farmers table
-        $stmt = $conn->prepare("SELECT id, email, password FROM farmers WHERE email = ?");
-        $stmt->bind_param("s", $email);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $row = $result->fetch_assoc();
-        $stmt->close();
+    <div class="signin-container">
+      <div class="box">
+        <input type="email" name="email" placeholder="Email" required />
+      </div>
 
-        // Check if user exists
-        if ($row) {
-            $storedPassword = $row['password'];
+      <div class="box">
+        <input type="password" name="password" placeholder="Password" required />
+      </div>
+    </div>
 
-            // Check if password is hashed
-            if (password_verify($password, $storedPassword) || $password === $storedPassword) {
-                $_SESSION['farmer_id'] = $row['id'];
-                $_SESSION['role'] = 'farmer';
-                ?>
-                <script>
-                    window.location.href = "farmer_dashboard.php";
-                </script>
-                <?php
-                exit();
-            } else {
-                $_SESSION['login_error'] = "Incorrect password.";
-                ?>
-                <script>
-                    window.location.href = "./login.php";
-                </script>
-                <?php
-                exit();
-            }
-        } else {
-            $_SESSION['login_error'] = "User not found.";
-            ?>
-            <script>
-                window.location.href = "./login.php";
-            </script>
-            <?php
-            exit();
-        }
-    }
-    ?>
-<script type="text/javascript">
-  function googleTranslateElementInit() {
-    new google.translate.TranslateElement({
-      pageLanguage: 'en',
-      includedLanguages: 'en,si,ta',
-      layout: google.translate.TranslateElement.InlineLayout.SIMPLE
-    }, 'google_translate_element');
-  }
+    <button class="btn-signin" type="submit" name="log">Sign In</button>
+  </form>
+</div>
+
+<?php if (isset($_SESSION['login_error'])): ?>
+<script>
+  alert("<?php echo $_SESSION['login_error']; ?>");
 </script>
-<script type="text/javascript"
-  src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit">
-</script>
+<?php unset($_SESSION['login_error']); endif; ?>
+
 </body>
 </html>

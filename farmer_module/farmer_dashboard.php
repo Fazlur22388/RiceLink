@@ -3,23 +3,23 @@ session_start();
 include('../backend/db_connect.php');
 
 if (!isset($_SESSION['farmer_id'])) {
-    header("Location: login.php");
-    exit();
+  header("Location: login.php");
+  exit();
 }
 
 $user_id = $_SESSION['farmer_id'];
 
-$query_user = "SELECT name, profile_picture FROM farmers WHERE id = $user_id";
+$query_user = "SELECT username, profile_picture FROM farmers WHERE id = $user_id";
 $result_user = mysqli_query($conn, $query_user);
 $user = mysqli_fetch_assoc($result_user);
 
-$name = $user['name'];
-$profile_picture = $user['profile_picture'];
+$username = $user['username'];
+$profile_picture = !empty($user['profile_picture']) ? 'uploads/' . $user['profile_picture'] : 'uploads/default.png';
 
 $query_posts = "SELECT * FROM listings WHERE farmer_id = $user_id ORDER BY id DESC";
 $posts_result = mysqli_query($conn, $query_posts);
 
-$query_farmers = "SELECT id, name, profile_picture FROM farmers WHERE id != $user_id";
+$query_farmers = "SELECT id, username, profile_picture FROM farmers WHERE id != $user_id";
 $other_farmers_result = mysqli_query($conn, $query_farmers);
 
 // Fetch WhatsApp messages for this farmer (simulate from a table `messages`)
@@ -31,12 +31,7 @@ $query_messages = "SELECT m.message AS content, m.created_at AS timestamp, b.nam
 $messages_result = mysqli_query($conn, $query_messages);
 
 $query_active_posts = "SELECT COUNT(*) AS total FROM listings WHERE farmer_id = $user_id";
-$query_buyers = "SELECT COUNT(DISTINCT buyer_id) AS total FROM inquiries WHERE farmer_id = $user_id";
-$query_views = "SELECT SUM(views) AS total FROM listings WHERE farmer_id = $user_id";
-
 $active_posts_count = mysqli_fetch_assoc(mysqli_query($conn, $query_active_posts))['total'];
-//$total_buyers = mysqli_fetch_assoc(mysqli_query($conn, $query_buyers))['total'];
-//$total_views = mysqli_fetch_assoc(mysqli_query($conn, $query_views))['total'];
 ?>
 
 
@@ -69,15 +64,9 @@ $active_posts_count = mysqli_fetch_assoc(mysqli_query($conn, $query_active_posts
       position: fixed;
     }
 
-    .sidebar h2 {
-      margin-bottom: 30px;
-      font-family: "Trebuchet MS", sans-serif;
-      font-weight: lighter;
-    }
-
     nav ul {
       list-style: none;
-      margin-top: 80px;
+      margin-top: 20px;
     }
 
     nav ul li a,
@@ -97,7 +86,7 @@ $active_posts_count = mysqli_fetch_assoc(mysqli_query($conn, $query_active_posts
     }
 
     .btn-logout {
-      margin-top: 300px;
+      margin-top: 250px;
       text-align: center;
       border: 1px solid #f4f6f8;
       border-radius: 25px;
@@ -110,8 +99,7 @@ $active_posts_count = mysqli_fetch_assoc(mysqli_query($conn, $query_active_posts
 
     .dlt-acc {
       font-size: 13px;
-      margin-left: 60px;
-      margin-top: 10px;
+      margin-left: 40px;
     }
 
     .dlt-acc:hover {
@@ -143,8 +131,6 @@ $active_posts_count = mysqli_fetch_assoc(mysqli_query($conn, $query_active_posts
     }
 
     .stats {
-      display: flex;
-      gap: 30px;
       margin: 30px 0;
     }
 
@@ -153,7 +139,7 @@ $active_posts_count = mysqli_fetch_assoc(mysqli_query($conn, $query_active_posts
       border-left: 5px solid #f0d5a4;
       border-radius: 20px;
       padding: 15px 20px;
-      flex: 1;
+      width: 400px;
     }
 
     .stat-box h3 {
@@ -217,8 +203,8 @@ $active_posts_count = mysqli_fetch_assoc(mysqli_query($conn, $query_active_posts
     }
 
     .actions a {
-      text-decoration: none;
-      color: #1d4d2d;
+      /* text-decoration: none; */
+      color: rgb(160, 150, 7);
       margin-right: 10px;
     }
 
@@ -229,8 +215,7 @@ $active_posts_count = mysqli_fetch_assoc(mysqli_query($conn, $query_active_posts
       margin: 30px 0;
     }
 
-    .farmers-section,
-    .message-section {
+    .farmers-section {
       background: #fff;
       padding: 20px;
       border-radius: 12px;
@@ -267,63 +252,22 @@ $active_posts_count = mysqli_fetch_assoc(mysqli_query($conn, $query_active_posts
       object-fit: cover;
       margin-bottom: 8px;
     }
-
-    .message-list {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-      max-height: 300px;
-      overflow-y: auto;
-    }
-
-    .message-card {
-      background-color: #fcfcfc;
-      border-radius: 10px;
-      padding: 15px;
-      border-left: 4px solid #1d4d2d;
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
-    }
-
-    .msg-header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 8px;
-    }
-
-    .msg-header img {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-    }
-
-    .msg-content {
-      font-size: 14px;
-      margin-bottom: 10px;
-    }
-
-    .whatsapp-btn {
-      background: #25d366;
-      color: white;
-      padding: 6px 12px;
-      border-radius: 6px;
-      text-decoration: none;
-      font-size: 13px;
-    }
   </style>
 </head>
 
 <body>
   <div id="google_translate_element" style="float:right; margin: 10px;"></div>
   <div class="sidebar">
-    <h2>RiceLink</h2>
+    <!-- <h2>RiceLink</h2> -->
+    <img src="images/logo.png" alt="logo" height="100" width="100" style="margin-left: 50px;">
     <nav>
       <ul>
         <li><a href="farmer_dashboard.html">Dashboard</a></li>
         <li><a href="add_posts.php">Add New Rice Posts</a></li>
         <li><a href="farmer_profile.php">Farmer Profile</a></li>
-        <li><a href="#whatsapp center">Message Center</a></li>
+        <!-- <li><a href="#whatsapp center">Message Center</a></li> -->
         <li><a href="edit_profile.php">Edit Profile</a></li>
+        <li><a href="change_password.php">Change Password</a></li>
       </ul>
     </nav>
     <a href="logout.php" class="btn-logout">Logout</a>
@@ -332,8 +276,8 @@ $active_posts_count = mysqli_fetch_assoc(mysqli_query($conn, $query_active_posts
 
   <main class="main-content">
     <div class="header">
-      <h1>Welcome, <?= htmlspecialchars($name) ?></h1>
-      <img src="uploads/<?= htmlspecialchars($profile_picture) ?>" alt="Profile" />
+      <h1>Welcome, <?= htmlspecialchars($username) ?></h1>
+      <img src="<?= htmlspecialchars($profile_picture) ?>" alt="Profile" />
     </div>
 
     <div class="stats">
@@ -341,80 +285,58 @@ $active_posts_count = mysqli_fetch_assoc(mysqli_query($conn, $query_active_posts
         <h3>Active Posts</h3>
         <p><?= $active_posts_count ?></p>
       </div>
-      
+
     </div>
 
     <form method="get" action="add_posts.php">
       <button class="btn-add" type="submit">+ Add New Rice Product</button>
     </form>
 
-    <section class="section">
-  <h2>My Posts</h2>
-  <div class="post-grid">
-    <?php while ($post = mysqli_fetch_assoc($posts_result)) { ?>
-      <div class="post">
-        <img src="../<?php echo htmlspecialchars($post['image_url']); ?>" alt="Rice Image">
-        <h3><?= htmlspecialchars($post['title']) ?></h3>
-        <p><?= htmlspecialchars($post['quantity']) ?> kg</p>
-        <p>Rs <?= number_format($post['price_per_kg'], 2) ?> per kg</p>
-        <div class="actions">
-          <a href="edit_post.php?id=<?= $post['id'] ?>">Edit</a>
-          <a href="delete_post.php?id=<?= $post['id'] ?>"
-            onclick="return confirm('Are you sure you want to delete this post?')">Delete</a>
-        </div>
+    <section class="section farmers-section">
+      <h2>Other Farmers</h2>
+      <div class="farmer-list">
+        <?php while ($farmer = mysqli_fetch_assoc($other_farmers_result)) { ?>
+          <div class="farmer-card" onclick="window.location.href='view_farmer_posts.php?id=<?= $farmer['id'] ?>'">
+            <img src="<?= htmlspecialchars($farmer['profile_picture']) ?>" alt="<?= htmlspecialchars($farmer['username']) ?>" />
+            <p><?= htmlspecialchars($farmer['username']) ?></p>
+          </div>
+        <?php } ?>
       </div>
-    <?php } ?>
-  </div>
-</section>
+    </section>
 
-
-    <div class="flex-sections">
-      <section class="section farmers-section">
-        <h2>Other Farmers</h2>
-        <div class="farmer-list">
-          <?php while ($farmer = mysqli_fetch_assoc($other_farmers_result)) { ?>
-            <div class="farmer-card" onclick="window.location.href='view_farmer_posts.php?id=<?= $farmer['id'] ?>'">
-              <img src="uploads/<?= htmlspecialchars($farmer['profile_picture']) ?>" alt="<?= htmlspecialchars($farmer['name']) ?>" />
-              <p><?= htmlspecialchars($farmer['name']) ?></p>
+    <section class="section">
+      <h2>My Posts</h2>
+      <div class="post-grid">
+        <?php while ($post = mysqli_fetch_assoc($posts_result)) { ?>
+          <div class="post">
+            <img src="<?= htmlspecialchars($post['image_url']) ?>" alt="Rice Image">
+            <h3><?= htmlspecialchars($post['title']) ?></h3>
+            <p>Quantity: <?= htmlspecialchars($post['quantity']) ?> kg</p>
+            <p>Rs <?= number_format($post['price_per_kg'], 2) ?> per kg</p>
+            <div class="actions">
+              <a href="edit_posts.php?id=<?= $post['id'] ?>">Edit</a>
+              <a href="delete_post.php?id=<?= $post['id'] ?>"
+                onclick="return confirm('Are you sure you want to delete this post?')">Delete</a>
+              <a href="view_post.php?id=<?= $post['id'] ?>">More</a>
             </div>
-          <?php } ?>
-        </div>
-      </section>
+          </div>
+        <?php } ?>
+      </div>
+    </section>
 
-      <section class="section message-section">
-        <h2>Message Center</h2>
-        <div class="message-list">
-          <?php while ($msg = mysqli_fetch_assoc($messages_result)) { ?>
-            <div class="message-card">
-              <div class="msg-header">
-                <img src="uploads/<?= htmlspecialchars($msg['profile_pic']) ?>" alt="Sender" />
-                <div>
-                  <strong><?= htmlspecialchars($msg['sender_name']) ?></strong><br />
-                  <span><?= htmlspecialchars($msg['timestamp']) ?></span>
-                </div>
-              </div>
-              <p class="msg-content"><?= htmlspecialchars($msg['content']) ?></p>
-              <a class="whatsapp-btn" href="https://wa.me/<?= htmlspecialchars($msg['phone']) ?>" target="_blank">
-                Reply on WhatsApp
-              </a>
-            </div>
-          <?php } ?>
-        </div>
-      </section>
-    </div>
   </main>
   <script type="text/javascript">
-  function googleTranslateElementInit() {
-    new google.translate.TranslateElement({
-      pageLanguage: 'en',
-      includedLanguages: 'en,si,ta',
-      layout: google.translate.TranslateElement.InlineLayout.SIMPLE
-    }, 'google_translate_element');
-  }
-</script>
-<script type="text/javascript"
-  src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit">
-</script>
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement({
+        pageLanguage: 'en',
+        includedLanguages: 'en,si,ta',
+        layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+      }, 'google_translate_element');
+    }
+  </script>
+  <script type="text/javascript"
+    src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit">
+  </script>
 </body>
 
 

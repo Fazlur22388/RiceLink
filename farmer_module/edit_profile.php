@@ -1,6 +1,6 @@
 <?php
 session_start();
-require ('../backend/db_connect.php');
+include('../backend/db_connect.php');
 
 $farmer_id = $_SESSION['farmer_id'] ?? null;
 if (!$farmer_id) {
@@ -9,45 +9,91 @@ if (!$farmer_id) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  $first_name = $_POST['first_name'];
-  $last_name = $_POST['last_name'];
-  $username = $_POST['username'];
-  $dob = $_POST['dob'];
-  $nic = $_POST['nic'];
-  $phone = $_POST['phone_number'];
-  $email = $_POST['email'];
-  $address = $_POST['address'];
-  $district = $_POST['district'];
-  $city = $_POST['city'];
-  $postal_code = $_POST['postal_code'];
-  $farm_type = $_POST['farm-type'];
-  $experience = $_POST['experience'];
-  $land_size = $_POST['land_size'];
+  // Escape all inputs to prevent SQL injection
+  $first_name = mysqli_real_escape_string($conn, $_POST['first_name']);
+  $last_name = mysqli_real_escape_string($conn, $_POST['last_name']);
+  $username = mysqli_real_escape_string($conn, $_POST['username']);
+  $dob = mysqli_real_escape_string($conn, $_POST['dob']);
+  $nic = mysqli_real_escape_string($conn, $_POST['nic']);
+  $phone = mysqli_real_escape_string($conn, $_POST['Phone']);
+  $email = mysqli_real_escape_string($conn, $_POST['email']);
+  $address = mysqli_real_escape_string($conn, $_POST['address']);
+  $district = mysqli_real_escape_string($conn, $_POST['district']);
+  $city = mysqli_real_escape_string($conn, $_POST['city']);
+  $postal_code = mysqli_real_escape_string($conn, $_POST['postal_code']);
+  $farm_type = mysqli_real_escape_string($conn, $_POST['farm-type']);
+  $experience = mysqli_real_escape_string($conn, $_POST['experience']);
+  $land_size = mysqli_real_escape_string($conn, $_POST['land_size']);
   $membership = isset($_POST['membership']) ? 1 : 0;
 
-  // Handle profile image upload
-  if (!empty($_FILES['profile_image']['name'])) {
-    $image_name = time() . '_' . $_FILES['profile_image']['name'];
+  // Handle profile picture upload
+  $image_sql = '';
+  if (isset($_FILES['profile_image']) && $_FILES['profile_image']['error'] == 0) {
+    $image_name = time() . '_' . basename($_FILES['profile_image']['name']);
     $target_path = 'uploads/' . $image_name;
-    move_uploaded_file($_FILES['profile_image']['tmp_name'], $target_path);
-    $_SESSION['user_image'] = $target_path;
-    $image_sql = ", profile_image = '$target_path'";
-  } else {
-    $image_sql = '';
+
+    if (move_uploaded_file($_FILES['profile_image']['tmp_name'], $target_path)) {
+      // Save only filename or relative path
+      $image_sql = ", profile_picture = '$image_name'"; // or '$target_path' if you save full path
+      $_SESSION['user_image'] = $image_name; // or $target_path
+    }
   }
 
+  // Then include $image_sql in your update query:
+  $update = "UPDATE farmers SET name = '$name', email = '$email' $image_sql WHERE id = $user_id";
+
+
+  // Handle license file upload (optional)
+  $license_sql = '';
+  if (!empty($_FILES['license']['name'])) {
+    $license_name = time() . '_' . basename($_FILES['license']['name']);
+    $license_path = 'uploads/' . $license_name;
+    if (move_uploaded_file($_FILES['license']['tmp_name'], $license_path)) {
+      $license_sql = ", license = '$license_path'";
+    }
+  }
+
+  // Final SQL query
   $sql = "UPDATE farmers SET 
-        first_name='$first_name', last_name='$last_name', username='$username', dob='$dob', nic='$nic',
-        phone='$phone', email='$email', address='$address', district='$district', city='$city',
-        postal_code='$postal_code', farm_type='$farm_type', experience='$experience',
-        land_size='$land_size', membership='$membership' $image_sql
-        WHERE id=$farmer_id";
-  mysqli_query($conn, $sql);
+    first_name = '$first_name',
+    last_name = '$last_name',
+    username = '$username',
+    dob = '$dob',
+    nic = '$nic',
+    phone = '$phone',
+    email = '$email',
+    address = '$address',
+    district = '$district',
+    city = '$city',
+    postal_code = '$postal_code',
+    farm_type = '$farm_type',
+    experience = '$experience',
+    land_size = '$land_size',
+    membership = '$membership'
+    $image_sql
+    $license_sql
+    WHERE id = $farmer_id";
+
+  // Execute the query
+  if (mysqli_query($conn, $sql)) {
+    echo "<script>
+      alert('Profile updated successfully!');
+      window.location.href = 'farmer_profile.php';
+    </script>";
+    exit;
+  } else {
+    echo "<script>
+      alert('Update failed: " . mysqli_real_escape_string($conn, mysqli_error($conn)) . "');
+      window.history.back();
+    </script>";
+    exit;
+  }
 }
 
+// Fetch updated data (if not submitted yet)
 $result = mysqli_query($conn, "SELECT * FROM farmers WHERE id = $farmer_id");
 $farmer = mysqli_fetch_assoc($result);
-$_SESSION['user_image'] = $farmer['profile_image'] ?? '';
+$_SESSION['user_image'] = $farmer['profile_picture'] ?? '';
 ?>
 
 
@@ -159,7 +205,7 @@ $_SESSION['user_image'] = $farmer['profile_image'] ?? '';
 
     .profile-info p {
       color: #5e6570;
-      line-height: 3px;
+      line-height: 20px;
       font-size: 12px;
       font-family: Arial, Helvetica, sans-serif;
       margin-top: -50;
@@ -214,15 +260,13 @@ $_SESSION['user_image'] = $farmer['profile_image'] ?? '';
     }
 
     .container {
-      display: flex;
-      width: 100%;
+      width: 80%;
     }
 
     .main-container {
-      /* */
       display: flex;
       flex-direction: column;
-      background-color: #fffac9;
+      margin-left: 100px;
     }
 
     .main-container p {
@@ -328,85 +372,71 @@ $_SESSION['user_image'] = $farmer['profile_image'] ?? '';
     </div>
   </div>
 
-  <!-- profile pic -->
-  <div class="profile-header">
-    <div class="profile-picture-container">
-      <label for="profileInput" class="profile-picture-label">
-        <img
-          src="<?= $_SESSION['user_image'] ?? 'uploads/default.png' ?> "
-          alt="Profile Picture"
-          id="profilePicture" />
-
-        <div class="edit-icon">
-          <img src="images/camera.png" alt="edit-icon" />
-        </div>
-
-        <input type="file" id="profileInput" accept="image/*" />
-      </label>
-    </div>
-
-    <div class="profile-info">
-      <h2>
-        <?= htmlspecialchars($farmer['first_name'] . ' ' . $farmer['last_name']) ?>
-      </h2>
-      <p><?= htmlspecialchars($farmer['email']) ?></p>
-      <p><?= htmlspecialchars($farmer['address']) ?></p>
-    </div>
-    <div class="profile-actions">
-      <button type="submit" form="editprofileForm">Save Changes</button>
-      <button onclick="deleteProfile()">Delete Profile</button>
-      <button onclick="window.location.href='farmer_dashboard.php'">Back to Dashboard</button>
-      <button onclick="window.location.href='logout.php'">Logout</button>
-    </div>
-  </div>
-
   <!-- main -->
-  <div class="main-container">
-    <div class="container">
-      <form
-        id="editprofileForm"
-        action="farmer_profile.php"
-        method="POST"
-        onsubmit="return validateForm();">
+  <form id="editprofileForm" action="" method="POST" enctype="multipart/form-data" onsubmit="return validateForm();">
+
+    <!-- profile pic -->
+    <div class="profile-header">
+      <div class="profile-picture-container">
+        <label for="profileInput" class="profile-picture-label">
+          <img src="uploads/<?= htmlspecialchars($farmer['profile_picture'] ?? 'default.png') ?>" alt="Profile Picture" id="profilePicture" />
+
+          <div class="edit-icon">
+            <img src="images/camera.png" alt="edit-icon" />
+          </div>
+
+          <input type="file" id="profileInput" name="profile_image" accept="image/*" onchange="previewImage(event)" />
+        </label>
+      </div>
+
+      <div class="profile-info">
+        <h2>
+          <?= htmlspecialchars($farmer['first_name'] . ' ' . $farmer['last_name']) ?>
+        </h2>
+        <p><?= htmlspecialchars($farmer['email']) ?></p>
+        <p><?= htmlspecialchars($farmer['address']) ?></p>
+      </div>
+      <div class="profile-actions">
+        <button type="submit" form="editprofileForm">Save Changes</button>
+        <button onclick="window.location.href='farmer_dashboard.php'">Back to Dashboard</button>
+        <button onclick="window.location.href='logout.php'">Logout</button>
+      </div>
+    </div>
+
+    <div class="main-container">
+      <div class="container">
+
         <div class="user-info">
           <p>User Information</p>
 
           <div class="box">
-            <input type="text" name="username" placeholder="Username" required />
+            <input type="text" name="username" value="<?= htmlspecialchars($farmer['username']) ?>" required />
           </div>
 
           <div class="box">
-            <input
-              type="text"
-              name="first_name"
-              placeholder="First Name"
-              required />
-            <input
-              type="text"
-              name="last_name"
-              placeholder="Last Name"
-              required />
+            <input type="text" name="first_name" value="<?= htmlspecialchars($farmer['first_name']) ?>" required />
+            <input type="text" name="last_name" value="<?= htmlspecialchars($farmer['last_name']) ?>" required />
           </div>
 
           <div class="box">
             <div class="dob">
               <label for="dob">DOB / Age</label>
-              <input type="date" name="dob" id="dob" required />
+              <input type="date" name="dob" id="dob" value="<?= htmlspecialchars($farmer['dob']) ?>" required />
             </div>
             <input
               type="text"
               name="nic"
               placeholder="National ID Number / NIC"
-              required />
+              value="<?= htmlspecialchars($farmer['nic']) ?>" required />
           </div>
 
           <div class="box">
             <input
               type="tel"
-              name="phone_number"
+              name="Phone"
               placeholder="Phone Number"
-              required />
-            <input type="email" name="email" placeholder="Email" required />
+              value="<?= htmlspecialchars($farmer['Phone']) ?>" required />
+            <input type="email" name="email" placeholder="Email" value="<?= htmlspecialchars($farmer['email']) ?>" required />
           </div>
         </div>
 
@@ -414,7 +444,7 @@ $_SESSION['user_image'] = $farmer['profile_image'] ?? '';
           <p id="contact">Contact Information</p>
 
           <div class="box">
-            <input type="text" name="address" placeholder="Address" required />
+            <input type="text" name="address" placeholder="Address" value="<?= htmlspecialchars($farmer['address']) ?>" required />
           </div>
 
           <div class="box">
@@ -422,13 +452,13 @@ $_SESSION['user_image'] = $farmer['profile_image'] ?? '';
               type="text"
               name="district"
               placeholder="District / Provice"
-              required />
-            <input type="text" name="city" placeholder="City / Town" required />
+              value="<?= htmlspecialchars($farmer['district']) ?>" required />
+            <input type="text" name="city" placeholder="City / Town" value="<?= htmlspecialchars($farmer['city']) ?>" required />
             <input
               type="number"
               name="postal_code"
               placeholder="Postal Code"
-              required />
+              value="<?= htmlspecialchars($farmer['postal_code']) ?>" required />
           </div>
         </div>
 
@@ -440,10 +470,10 @@ $_SESSION['user_image'] = $farmer['profile_image'] ?? '';
             <div class="farm-type">
               <label for="farm-type">Type of Farming</label>
               <select name="farm-type" id="farm-type">
-                <option value="rice">Paddy Farmers</option>
-                <option value="vegetable">Vegetable Growers</option>
-                <option value="tea">Tea Planters</option>
-                <option value="fruit">Fruit Growers</option>
+                <option value="rice" <?= $farmer['farm_type'] == 'rice' ? 'selected' : '' ?>>Paddy Farmers</option>
+                <option value="vegetable" <?= $farmer['farm_type'] == 'vegetable' ? 'selected' : '' ?>>Vegetable Growers</option>
+                <option value="tea" <?= $farmer['farm_type'] == 'tea' ? 'selected' : '' ?>>Tea Planters</option>
+                <option value="fruit" <?= $farmer['farm_type'] == 'fruit' ? 'selected' : '' ?>>Fruit Growers</option>
               </select>
             </div>
           </div>
@@ -453,17 +483,17 @@ $_SESSION['user_image'] = $farmer['profile_image'] ?? '';
               type="number"
               name="experience"
               placeholder="Years of Experience"
-              required />
+              value="<?= htmlspecialchars($farmer['experience']) ?>" required />
           </div>
 
           <div class="box">
-            <input type="number" name="land_size" placeholder="Land Size" />
+            <input type="number" name="land_size" placeholder="Land Size" value="<?= htmlspecialchars($farmer['land_size']) ?>" />
           </div>
 
           <div class="box">
             <div class="display-group">
               <div class="membership">
-                <input type="checkbox" id="membership" name="membership" />
+                <input type="checkbox" id="membership" name="membership" <?= $farmer['membership'] ? 'checked' : '' ?> />
                 <label for="membership">Membership in Agricultural Associations</label>
               </div>
             </div>
@@ -472,12 +502,15 @@ $_SESSION['user_image'] = $farmer['profile_image'] ?? '';
           <div class="box">
             <div class="license">
               <label for="license">Certifications / Licenses</label>
+              <?php if (!empty($farmer['license'])): ?>
+                <p style="font-size: 13px;">Current License: <a href="<?= $farmer['license'] ?>" target="_blank">View File</a></p>
+              <?php endif; ?>
               <input type="file" id="license" name="license" />
             </div>
           </div>
         </div>
-    </div>
-    </form>
+      </div>
+  </form>
   </div>
 
   <script>
@@ -488,15 +521,6 @@ $_SESSION['user_image'] = $farmer['profile_image'] ?? '';
         output.src = reader.result;
       };
       reader.readAsDataURL(event.target.files[0]);
-
-      // Auto-submit profile picture
-      document.getElementById('profilePicForm').submit();
-    }
-
-    function deleteProfile() {
-      if (confirm("Are you sure you want to delete your profile?")) {
-        window.location.href = "delete_profile.php";
-      }
     }
   </script>
 

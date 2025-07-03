@@ -2,59 +2,107 @@
 session_start();
 include('../backend/db_connect.php');
 
-// Ensure the farmer is logged in
 if (!isset($_SESSION['farmer_id'])) {
-    header("Location: ../login.php");
-    exit();
+  header("Location: login.php");
+  exit();
 }
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $farmer_id = $_SESSION['farmer_id'];
-    $title = trim($_POST['product-type']);
-    $rice_type = trim($_POST['rice-type']);
-    $quantity = floatval($_POST['quantity']);
-    $price_per_kg = floatval($_POST['price-per-unit']);
-    $harvest_date = $_POST['harvest-date'];
-    $address = trim($_POST['farm-address']);
-    $description = trim($_POST['description']);
-    $is_available = 1; // default value, always available on insert
+  // Initialize variables
+  $farmer_id = $_SESSION['farmer_id'];
+  $title = trim($_POST['product-type']);
+  $description = trim($_POST['description'] ?? '');
+  $rice_type = trim($_POST['rice_type']);
+  $quantity = (float) $_POST['quantity'];
+  $price = (float) $_POST['price_per_kg'];
+  $harvest_date = $_POST['harvest_date'];
+  $farm_address = trim($_POST['farm_address']);
 
-    
-    // Handle product image upload
-$image_url = "";
-$uploadDir = __DIR__ . '/../product_pics/';
-$relativePath = 'product_pics/';
-
-if (!is_dir($uploadDir)) {
-    mkdir($uploadDir, 0777, true);
-}
-
-$fileName = time() . '_' . basename($_FILES['product_picture']['name']);
-$uploadPath = $uploadDir . $fileName;
-
-if (move_uploaded_file($_FILES['product_picture']['tmp_name'], $uploadPath)) {
-    $image_url = $relativePath . $fileName;  // Save full relative path for dashboard
-} else {
-    echo "Image upload failed.";
+  // Validate required fields
+  if (empty($title) || empty($rice_type) || empty($quantity) || empty($price) || empty($harvest_date) || empty($farm_address)) {
+    header("Location: add_posts.php?msg=Please fill all required fields");
     exit();
-}
+  }
 
-    // Prepare and execute SQL query
-    $sql = "INSERT INTO listings (farmer_id, title, description, rice_type, quantity, price_per_kg, harvest_date, image_url, is_available) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+  // Handle file upload
+  if (!isset($_FILES['product_picture']) || $_FILES['product_picture']['error'] !== UPLOAD_ERR_OK) {
+    header("Location: add_posts.php?msg=Please upload a product image");
+    exit();
+  }
+
+  // Validate image file
+  $allowed_types = ['image/jpeg', 'image/png', 'image/gif'];
+  $file_info = finfo_open(FILEINFO_MIME_TYPE);
+  $mime_type = finfo_file($file_info, $_FILES['product_picture']['tmp_name']);
+  finfo_close($file_info);
+
+  if (!in_array($mime_type, $allowed_types)) {
+    header("Location: add_posts.php?msg=Only JPEG, PNG and GIF images are allowed");
+    exit();
+  }
+
+  // Create uploads directory if it doesn't exist
+  if (!file_exists('uploads')) {
+    mkdir('uploads', 0777, true);
+  }
+
+  // Generate unique filename
+  $file_ext = pathinfo($_FILES['product_picture']['name'], PATHINFO_EXTENSION);
+  $img_name = uniqid('img_', true) . '.' . $file_ext;
+  $img_path = "uploads/" . $img_name;
+
+  if (!move_uploaded_file($_FILES['product_picture']['tmp_name'], $img_path)) {
+    header("Location: add_posts.php?msg=Failed to upload image");
+    exit();
+  }
+
+  // Insert into listings
+  try {
+    $sql = "INSERT INTO listings (
+                    farmer_id, title, description, rice_type,
+                    quantity, price_per_kg, harvest_date,
+                    image_url, farm_address, created_at, is_available
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), 1)";
 
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("isssddssi", $farmer_id, $title, $description, $rice_type, $quantity, $price_per_kg, $harvest_date, $image_url, $is_available);
-
-    if ($stmt->execute()) {
-        header("Location: farmer_dashboard.php?msg=success");
-        exit();
-    } else {
-        echo "Error: " . $stmt->error;
+    if (!$stmt) {
+      throw new Exception("Prepare failed: " . $conn->error);
     }
+
+    $stmt->bind_param(
+      "isssddsss",
+      $farmer_id,
+      $title,
+      $description,
+      $rice_type,
+      $quantity,
+      $price,
+      $harvest_date,
+      $img_path,
+      $farm_address
+    );
+
+    if (!$stmt->execute()) {
+      throw new Exception("Execute failed: " . $stmt->error);
+    }
+
+    header("Location: farmer_dashboard.php?msg=success");
+    exit();
+  } catch (Exception $e) {
+    // Log the error
+    error_log("Database error: " . $e->getMessage());
+
+    // Delete the uploaded file if the database operation failed
+    if (file_exists($img_path)) {
+      unlink($img_path);
+    }
+
+    header("Location: add_posts.php?msg=Error saving your data. Please try again.");
+    exit();
+  }
 }
 ?>
-
 
 
 <!DOCTYPE html>
@@ -179,7 +227,7 @@ if (move_uploaded_file($_FILES['product_picture']['tmp_name'], $uploadPath)) {
     }
 
     .product-image {
-      width: 500px;
+      width: 360px;
       height: 260px;
       border: 1px solid #696666;
       border-radius: 20px;
@@ -275,16 +323,6 @@ if (move_uploaded_file($_FILES['product_picture']['tmp_name'], $uploadPath)) {
       font-family: Arial, Helvetica, sans-serif;
     }
 
-    .moisture-level {
-      display: flex;
-      gap: 3px;
-    }
-
-    .grain-size {
-      display: flex;
-      gap: 30px;
-    }
-
     .product-upload-container {
       text-align: center;
       padding-top: 10px;
@@ -335,37 +373,26 @@ if (move_uploaded_file($_FILES['product_picture']['tmp_name'], $uploadPath)) {
       margin-right: 50px;
     }
 
-    .availability{
+    .availability {
       margin-top: 12px;
     }
 
-    .sec-3 p{
-      text-align: center;
+    #product-upload {
+      display: none;
     }
 
-    /* .price-info{
-      border: 1px solid rgb(133, 132, 132);
-      padding: 10px;
-      border-radius: 20px;
-      width: 700px;
-      margin-left: 400px;
-      background-color: #46a064;
-      /* color: white; 
-    }*/
-
-    /* .dtls {
+    .date{
       display: flex;
-      gap: 280px;
-      font-weight: bolder;
-      color: white;
-      
+      width: 500px;
     }
 
-    .dtls h3{
-      margin-left: 20px;
+    .date label {
+      padding: 20px 2px 8px;
+      font-size: 12px;
       text-transform: uppercase;
-      font-size: 15px;
-    } */ 
+      color: #797373;
+      font-family: Arial, Helvetica, sans-serif;
+    }
   </style>
 </head>
 
@@ -383,13 +410,13 @@ if (move_uploaded_file($_FILES['product_picture']['tmp_name'], $uploadPath)) {
     </div>
   </div>
 
-  <div class="main-container">
-    
-    <form action="add_posts.php" method="POST" enctype="multipart/form-data">
+  <form action="add_posts.php" method="POST" enctype="multipart/form-data">
+    <div class="main-container">
       <div class="btn">
-      <button type="submit" >Submit</button>
-      <button onclick="window.location.href='farmer_dashboard.php'">Cancel</button>
-    </div>
+        <button type="submit">Submit</button>
+        <button type="button" onclick="window.location.href='farmer_dashboard.php'">Cancel</button>
+      </div>
+
       <p>Basic Rice Information</p>
       <div class="rice-info">
         <div class="box-1">
@@ -398,13 +425,13 @@ if (move_uploaded_file($_FILES['product_picture']['tmp_name'], $uploadPath)) {
               <input
                 type="text"
                 name="product-type"
-                placeholder="Product Title" required/>
+                placeholder="Product Title" required />
             </div>
 
             <div class="display-group">
               <div class="rice-variety">
-                <label for="rice-type">Rice variety / Type</label>
-                <select name="rice-type" id="rice-type" required>
+                <label for="rice_type">Rice variety / Type</label>
+                <select name="rice_type" id="rice_type" required>
                   <option value="">-- Select Rice Variety --</option>
                   <option value="Keeri Samba">Keeri Samba</option>
                   <option value="Samba">Samba</option>
@@ -421,20 +448,20 @@ if (move_uploaded_file($_FILES['product_picture']['tmp_name'], $uploadPath)) {
               <input
                 type="number"
                 name="quantity"
-                placeholder="Quantity Available (kg)" required/>
+                placeholder="Quantity Available (kg)" required />
             </div>
 
             <div class="display-group">
               <input
                 type="text"
-                name="price-per-unit"
-                placeholder="Price-Per-Unit" required/>
+                name="price_per_kg"
+                placeholder="Price-Per-kg" required />
             </div>
 
             <div class="display-group">
               <div class="harvest-date">
-                <label for="harvest-date">Harvest Date</label>
-                <input type="date" name="harvest-date" id="harvest-date" required/>
+                <label for="harvest_date">Harvest Date</label>
+                <input type="date" name="harvest_date" id="harvest_date" required />
               </div>
             </div>
           </div>
@@ -453,7 +480,7 @@ if (move_uploaded_file($_FILES['product_picture']['tmp_name'], $uploadPath)) {
                 name="product_picture"
                 accept="image/*"
                 onchange="previewImage()"
-                hidden required/>
+                hidden required />
               <p class="hint">
                 Set the product thumbnail image. Only *.png, *.jpg and *.jpeg
                 image files are accepted
@@ -472,11 +499,16 @@ if (move_uploaded_file($_FILES['product_picture']['tmp_name'], $uploadPath)) {
               <div class="display-group">
                 <input
                   type="text"
-                  name="farm-address"
-                  placeholder="Location / Farm Address" required/>
+                  name="farm_address"
+                  placeholder="Location / Farm Address" required />
               </div>
 
-              
+              <div class="display-group">
+                <div class="certification">
+                  <label>Organic Certification</label>
+                  <input type="file" name="Certification" />
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -489,64 +521,70 @@ if (move_uploaded_file($_FILES['product_picture']['tmp_name'], $uploadPath)) {
                 <div class="rice-disc">
                   <label for="description">Description</label>
                   <textarea id="description" name="description" required></textarea>
+                </div>
+              </div>
+            </div>
 
+            <div class="box-1">
+              <div class="display-group">
+                <div class="date">
+                  <label for="created_at">Created At</label>
+                  <input type="date" id="created_at">
                 </div>
               </div>
             </div>
             <div class="box-1">
               <div class="display-group">
-                <div class="harvest-date">
-                  <label for="created-at">Created At</label>
-                  <input type="date" id="created-at">
+                <div class="date">
+                  <label for="updated_at">Updated At</label>
+                  <input type="date" id="updated_at">
                 </div>
               </div>
             </div>
             <div class="box-1">
               <div class="display-group">
-                <div class="harvest-date">
-                  <label for="updated-at">Updated At</label>
-                  <input type="date" id="updated-at">
+                <div class="availability">
+                  <label for="availability">Available</label>
+                  <input type="checkbox" id="availability">
                 </div>
               </div>
             </div>
-            
           </div>
         </div>
       </div>
-
-      <!-- <div class="sec-3">
-          <p>Maximum wholesale Price</p>
-          <div class="price-info">
-            <div class="dtls">
-              <h3>Rice Veriety</h3>
-              <h3>Price per Unit (Kg)</h3>
-            </div>
-          </div>
-        </div> -->
-    </form>
+  </form>
   </div>
 
   <script>
     function previewImage() {
-      const fileInput = document.getElementById("product-upload");
-      const reader = new FileReader();
+      const input = document.getElementById("product-upload");
+      const label = document.querySelector(".upload-circle");
+      const plusIcon = label.querySelector(".plus");
 
-      reader.onload = function(e) {
-        const imgPreview = document.createElement("img");
-        imgPreview.src = e.target.result;
-        imgPreview.style.width = "200px";
-        imgPreview.style.height = "200px";
-        imgPreview.style.objectFit = "cover";
-        imgPreview.style.borderRadius = "25px";
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          plusIcon.style.display = "none"; // hide the '+'
 
-        const container = document.querySelector(".product-upload-container");
-        const oldImage = container.querySelector("img");
-        if (oldImage) container.removeChild(oldImage);
-        container.appendChild(imgPreview);
-      };
+          // Remove any existing image
+          const existingImg = label.querySelector("img");
+          if (existingImg) label.removeChild(existingImg);
 
-      if (fileInput.files[0]) {
-        reader.readAsDataURL(fileInput.files[0]);
+          // Create new image preview
+          const img = document.createElement("img");
+          img.src = e.target.result;
+          img.style.width = "100%";
+          img.style.height = "100%";
+          img.style.borderRadius = "25px";
+          img.style.objectFit = "cover";
+          img.style.position = "absolute";
+          img.style.top = 0;
+          img.style.left = 0;
+
+          label.style.position = "relative";
+          label.appendChild(img);
+        };
+        reader.readAsDataURL(input.files[0]);
       }
     }
 

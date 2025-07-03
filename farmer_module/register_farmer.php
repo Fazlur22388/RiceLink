@@ -6,400 +6,475 @@ $errors = [];
 $created_at = date("Y-m-d H:i:s");
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    function clean($data, $conn) {
-        return mysqli_real_escape_string($conn, trim($data));
-    }
+  // Sanitize inputs
+  function clean($data, $conn)
+  {
+    return mysqli_real_escape_string($conn, trim($data));
+  }
 
-    $name = clean($_POST['name'], $conn);
-    $age = intval($_POST['age']);
-    $address = clean($_POST['address'], $conn);
-    $city = clean($_POST['city'], $conn);
-    $district = clean($_POST['district'], $conn);
-    $phone = clean($_POST['phone_number'], $conn);
-    $whatsapp = clean($_POST['whatsapp_number'], $conn);
-    $email = clean($_POST['email'], $conn);
-    $password = $_POST['password'];
-    $confirm_password = $_POST['confirm_password'];
+  // Personal Details
+  $username = clean($_POST['username'], $conn);
+  $first_name = clean($_POST['first_name'], $conn);
+  $last_name = clean($_POST['last_name'], $conn);
+  $dob = $_POST['dob'];
+  $nic = clean($_POST['nic'], $conn);
+  $phone = clean($_POST['phone_number'], $conn);
+  $email = clean($_POST['email'], $conn);
+  $password = $_POST['password'];
+  $confirm_password = $_POST['confirm_password'];
 
-    if (empty($name)) $errors[] = "Name is required.";
-    if ($age < 18 || $age > 100) $errors[] = "Age must be between 18 and 100.";
-    if (empty($address)) $errors[] = "Address is required.";
-    if (empty($city)) $errors[] = "City is required.";
-    if (empty($district)) $errors[] = "District is required.";
-    if (!preg_match('/^\d{10}$/', $phone)) $errors[] = "Valid phone is required.";
-    if (!preg_match('/^\d{10}$/', $whatsapp)) $errors[] = "Valid WhatsApp number required.";
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = "Valid email is required.";
-    if (strlen($password) < 6) $errors[] = "Password must be at least 6 characters.";
-    if ($password !== $confirm_password) $errors[] = "Passwords do not match.";
+  // Contact Details
+  $address = clean($_POST['address'], $conn);
+  $district = clean($_POST['district'], $conn);
+  $city = clean($_POST['city'], $conn);
+  $postal_code = clean($_POST['postal_code'], $conn);
 
-    // Check email
-    $check = $conn->prepare("SELECT id FROM farmers WHERE email = ?");
-    $check->bind_param("s", $email);
-    $check->execute();
-    $check->store_result();
-    if ($check->num_rows > 0) $errors[] = "Email already exists.";
-    $check->close();
+  // Professional Details
+  $farm_type = clean($_POST['farm-type'], $conn);
+  $experience = clean($_POST['experience'], $conn);
+  $land_size = clean($_POST['land_size'], $conn);
+  $membership = isset($_POST['membership']) ? 'Yes' : 'No';
 
-    // Upload profile picture
-    $profile_picture = "";
-    if ($_FILES['profile_picture']['error'] === UPLOAD_ERR_OK) {
-        $targetDir = "../product_pics/";
-        if (!is_dir($targetDir)) mkdir($targetDir, 0777, true);
-        $fileName = time() . "_" . basename($_FILES['profile_picture']['name']);
-        $uploadPath = $targetDir . $fileName;
-        if (move_uploaded_file($_FILES['profile_picture']['tmp_name'], $uploadPath)) {
-            $profile_picture = $fileName;
-        } else {
-            $errors[] = "Image upload failed.";
-        }
+  // Validate
+  if (empty($username)) $errors['username'] = "Username is required.";
+  if (empty($first_name)) $errors['first_name'] = "First name is required.";
+  if (empty($last_name)) $errors['last_name'] = "Last name is required.";
+  if (empty($dob)) $errors['dob'] = "Date of birth is required.";
+  if (empty($nic)) $errors['nic'] = "NIC is required.";
+  if (empty($phone) || !preg_match('/^\d{10}$/', $phone)) $errors['phone_number'] = "Enter valid 10-digit phone number.";
+  if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) $errors['email'] = "Enter a valid email.";
+  if (empty($password) || strlen($password) < 6) $errors['password'] = "Password must be at least 6 characters.";
+  if ($password !== $confirm_password) $errors['confirm_password'] = "Passwords do not match.";
+
+  if (empty($address)) $errors['address'] = "Address is required.";
+  if (empty($district)) $errors['district'] = "District is required.";
+  if (empty($city)) $errors['city'] = "City is required.";
+  if (empty($postal_code)) $errors['postal_code'] = "Postal code is required.";
+
+  // Check for duplicate email
+  $checkEmail = $conn->prepare("SELECT id FROM farmers WHERE email = ?");
+  $checkEmail->bind_param("s", $email);
+  $checkEmail->execute();
+  $checkEmail->store_result();
+  if ($checkEmail->num_rows > 0) {
+    $errors['email'] = "Email already exists.";
+  }
+  $checkEmail->close();
+
+  // Handle image upload
+  $profileImagePath = '';
+  if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] == 0) {
+    $targetDir = "uploads/";
+    $fileName = basename($_FILES["profile_picture"]["name"]);
+    $targetFile = $targetDir . uniqid() . "_" . $fileName;
+    $imageFileType = strtolower(pathinfo($targetFile, PATHINFO_EXTENSION));
+    $allowedTypes = ['jpg', 'jpeg', 'png', 'gif'];
+
+    if (!in_array($imageFileType, $allowedTypes)) {
+      $errors['profile_picture'] = "Only JPG, PNG, or GIF files allowed.";
     } else {
-        $errors[] = "Profile picture is required.";
+      if (!move_uploaded_file($_FILES["profile_picture"]["tmp_name"], $targetFile)) {
+        $errors['profile_picture'] = "Image upload failed.";
+      } else {
+        $profileImagePath = $targetFile;
+      }
     }
+  } else {
+    $errors['profile_picture'] = "Profile picture is required.";
+  }
+  if (!empty($errors)) {
+    echo "<pre>";
+    print_r($errors);
+    echo "</pre>";
+    exit;
+  }
+  // Insert data
+  if (empty($errors)) {
+    $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
-    // Insert to DB
-    if (empty($errors)) {
-        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-        $stmt = $conn->prepare("INSERT INTO farmers (name, age, address, city, district, phone, whatsapp, email, password, created_at, profile_picture)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("sisssssss", $name, $age, $address, $city, $district, $phone, $whatsapp, $email, $hashed_password, $created_at, $profile_picture);
+    $stmt = $conn->prepare("INSERT INTO farmers (username, first_name, last_name, dob, nic, phone, email, password, address, district, city, postal_code, farm_type, experience, land_size, membership, profile_picture, created_at)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
-        if ($stmt->execute()) {
-            $_SESSION['farmer_id'] = $stmt->insert_id;
-            echo "<script>alert('Registration successful!'); window.location='login.php';</script>";
-        } else {
-            echo "DB Error: " . $stmt->error;
-        }
-        $stmt->close();
+    $stmt->bind_param(
+      "ssssssssssssssssss", // 18 values
+      $username,
+      $first_name,
+      $last_name,
+      $dob,
+      $nic,
+      $phone,
+      $email,
+      $hashed_password,
+      $address,
+      $district,
+      $city,
+      $postal_code,
+      $farm_type,
+      $experience,
+      $land_size,
+      $membership,
+      $profileImagePath,
+      $created_at
+    );
+
+    if ($stmt->execute()) {
+      $_SESSION['farmer_id'] = $stmt->insert_id;
+      echo "<script>alert('Registration successful! You can now log in.'); window.location='login.php';</script>";
     } else {
-        echo "<script>alert('Please fix form errors');</script>";
+      echo "Error: " . $stmt->error;
     }
+
+    $stmt->close();
+  } else {
+    echo "<script>alert('Please fix the form errors.'); window.history.back();</script>";
+  }
+
+  $conn->close();
 }
 ?>
 
 
-
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Farmer Registration | RiceLink</title>
-    <style>
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
 
-      body {
-        height: 100vh;
-        overflow-y: hidden;
-      }
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Farmer Registration | RiceLink</title>
+  <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" /> -->
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-      input,
-      select,
-      label,
-      p {
-        font-family: Arial, Helvetica, sans-serif;
-      }
+    body {
+      height: 100vh;
+      overflow-y: hidden;
+    }
 
-      input {
-        width: 100%;
-        border: none;
-        border-bottom: 1px solid #ccc;
-        padding: 20px 0 8px;
-        font-size: 12px;
-        text-transform: uppercase;
-        outline: none;
-      }
+    input,
+    select,
+    label,
+    p {
+      font-family: Arial, Helvetica, sans-serif;
+    }
 
-      .container-1 {
-        display: flex;
-        width: 100%;
-      }
+    input {
+      width: 100%;
+      border: none;
+      border-bottom: 1px solid #ccc;
+      padding: 20px 0 8px;
+      font-size: 12px;
+      text-transform: uppercase;
+      outline: none;
+    }
 
-      .left-end {
-        width: 60%;
-      }
+    select {
+      border: none;
+      width: 100%;
+      border: none;
+      border-bottom: 1px solid #ccc;
+      padding: 20px 0 8px;
+      font-size: 12px;
+      text-transform: uppercase;
+      outline: none;
+    }
+    
+    .container-1 {
+      display: flex;
+      width: 100%;
+    }
 
-      .left-end h1 {
-        margin: 90px auto 10px 280px;
-        font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande",
-          "Lucida Sans", Arial, sans-serif;
-        font-weight: lighter;
-      }
+    .left-end {
+      width: 60%;
+    }
 
-      .subheading {
-        font-size: 15px;
-        color: #555;
-        margin: auto 120px 50px;
-      }
+    .left-end h1 {
+      margin: 90px auto 10px 300px;
+      font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande",
+        "Lucida Sans", Arial, sans-serif;
+      font-weight: lighter;
+    }
 
-      .signup-container {
-        margin-left: 120px;
-        display: flex;
-        flex-direction: column;
-      }
+    .subheading {
+      font-size: 15px;
+      color: #555;
+      margin: auto 120px 50px;
+    }
 
-      .signup-container p {
-        font-size: 14px;
-        text-transform: uppercase;
-        color: #3c3d41;
-      }
+    .signup-container {
+      margin-left: 120px;
+      display: flex;
+      flex-direction: column;
+    }
 
-      .box {
-        display: flex;
-        gap: 32px;
-        padding: 12px 100px 12px 0;
-      }
+    .signup-container p {
+      font-size: 14px;
+      text-transform: uppercase;
+      color: #3c3d41;
+    }
 
-      .dob {
-        display: flex;
-        width: 600px;
-      }
+    .box {
+      display: flex;
+      gap: 32px;
+      padding: 12px 100px 12px 0;
+    }
 
-      .dob label,
-      .farm-type label,
-      .license label,
-      .membership-label {
-        padding: 20px 5px 8px;
-        font-size: 12px;
-        text-transform: uppercase;
-        color: #797373;
-      }
+    .dob {
+      display: flex;
+      width: 600px;
+    }
 
-      .password-toggle {
-        position: relative;
-        width: 60%;
-      }
+    .dob label,
+    .farm-type label,
+    .license label,
+    .membership-label {
+      padding: 20px 5px 8px;
+      font-size: 12px;
+      text-transform: uppercase;
+      color: #797373;
+    }
 
-      .password-toggle i {
-        position: absolute;
-        right: 10px;
-        top: 35%;
-        cursor: pointer;
-      }
+    .password-toggle {
+      position: relative;
+      width: 60%;
+    }
 
-      .btn-signup,
-      .btn-signin {
-        margin-top: 10px;
-        padding: 10px 20px;
-        border-radius: 25px;
-        background-color: #1d4d2d;
-        border: none;
-        color: white;
-      }
+    .password-toggle i {
+      position: absolute;
+      right: 10px;
+      top: 35%;
+      cursor: pointer;
+    }
 
-      .btn-signup:hover,
-      .btn-signin:hover {
-        background-color: #3a724c;
-      }
+    .btn-signup,
+    .btn-signin {
+      margin-top: 10px;
+      padding: 10px 20px;
+      border-radius: 25px;
+      background-color: #1d4d2d;
+      border: none;
+      color: white;
+    }
 
-      .btn-signin {
-        margin-left: 150px;
-        margin-bottom: 20px;
-      }
+    .btn-signup:hover,
+    .btn-signin:hover {
+      background-color: #3a724c;
+    }
 
-      .arrow-wrapper-1,
-      .arrow-wrapper-2 {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        z-index: 2;
-      }
+    .btn-signin {
+      margin-left: 150px;
+      margin-bottom: 20px;
+    }
 
-      .arrow-wrapper-1 {
-        margin-left: 130px;
-      }
+    .arrow-wrapper-1,
+    .arrow-wrapper-2 {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 2;
+    }
 
-      .arrow-wrapper-2 {
-        margin-left: -130px;
-      }
+    .arrow-wrapper-1 {
+      margin-left: 145px;
+    }
 
-      .arrow-1,
-      .arrow-2 {
-        background-color: #ffffff;
-        color: rgb(31, 112, 38);
-        width: 40px;
-        height: 70px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        font-size: 24px;
-      }
+    .arrow-wrapper-2 {
+      margin-left: -145px;
+    }
 
-      .right-end,
-      .profile {
-        width: 40%;
-        background: url(images/1.jpg) no-repeat;
-        background-size: cover;
-        min-height: 100vh;
-        position: relative;
-      }
+    .arrow-1,
+    .arrow-2 {
+      background-color: #ffffff;
+      color: rgb(31, 112, 38);
+      width: 40px;
+      height: 70px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 24px;
+    }
 
-      .content,
-      .profile-upload-container {
-        background-color: rgba(235, 231, 225, 0.8);
-        border-radius: 20px;
-      }
+    .right-end,
+    .profile {
+      width: 40%;
+      background: url(images/1.jpg) no-repeat;
+      background-size: cover;
+      min-height: 100vh;
+      position: relative;
+    }
 
-      .content {
-        width: 400px;
-        margin: 230px 0 0 70px;
-        align-items: center;
-      }
+    .content,
+    .profile-upload-container {
+      background-color: rgba(235, 231, 225, 0.8);
+      border-radius: 20px;
+    }
 
-      .content h1,
-      .profile-upload-container h1 {
-        text-align: center;
-        padding-top: 15px;
-        font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande",
-          "Lucida Sans", Arial, sans-serif;
-        font-weight: lighter;
-        font-size: 24px;
-        padding-bottom: 15px;
-      }
+    .content {
+      width: 400px;
+      margin: 250px 0 0 100px;
+      align-items: center;
+    }
 
-      .content p,
-      .profile-upload-container p {
-        text-align: center;
-        font-size: 15px;
-        padding-top: 5px;
-      }
+    .content h1,
+    .profile-upload-container h1 {
+      text-align: center;
+      padding-top: 15px;
+      font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande",
+        "Lucida Sans", Arial, sans-serif;
+      font-weight: lighter;
+      font-size: 24px;
+      padding-bottom: 15px;
+    }
 
-      .profile-upload-container {
-        text-align: center;
-        padding: 40px 30px;
-        color: #000000;
-        margin: 150px 50px;
-      }
+    .content p,
+    .profile-upload-container p {
+      text-align: center;
+      font-size: 15px;
+      padding-top: 5px;
+    }
 
-      .profile-upload-container .highlight {
-        color: #000000;
-      }
+    .profile-upload-container {
+      text-align: center;
+      padding: 40px 30px;
+      color: #000000;
+      margin: 150px 50px;
+    }
 
-      .upload-circle {
-        display: inline-block;
-        width: 120px;
-        height: 120px;
-        background-color: #1d4d2d;
-        border-radius: 50%;
-        position: relative;
-        cursor: pointer;
-        margin-bottom: 10px;
-        transition: transform 0.2s;
-      }
+    .profile-upload-container .highlight {
+      color: #000000;
+    }
 
-      .upload-circle:hover {
-        transform: scale(1.05);
-      }
+    .upload-circle {
+      display: inline-block;
+      width: 120px;
+      height: 120px;
+      background-color: #1d4d2d;
+      border-radius: 50%;
+      position: relative;
+      cursor: pointer;
+      margin-bottom: 10px;
+      transition: transform 0.2s;
+    }
 
-      .plus {
-        font-size: 50px;
-        color: white;
-        line-height: 120px;
-        display: block;
-      }
+    .upload-circle:hover {
+      transform: scale(1.05);
+    }
 
-      .upload-text {
-        font-size: 5px;
-        color: #726e6e;
-        margin-bottom: 20px;
-      }
+    .plus {
+      font-size: 50px;
+      color: white;
+      line-height: 120px;
+      display: block;
+    }
 
-      .contact-info {
-        border-bottom: #1d4d2d 2px solid;
-        padding-bottom: 30px;
-        width: 100%;
-      }
+    .upload-text {
+      font-size: 5px;
+      color: #726e6e;
+      margin-bottom: 20px;
+    }
 
-      #contact {
-        margin-top: 50px;
-      }
+    .contact-info {
+      border-bottom: #1d4d2d 2px solid;
+      padding-bottom: 30px;
+      width: 100%;
+    }
 
-      #profetional {
-        margin-top: 40px;
-      }
+    #contact {
+      margin-top: 50px;
+    }
 
-      .farm-type,
-      .membership,
-      .license {
-        flex: 1 1 100%;
-      }
+    #profetional {
+      margin-top: 40px;
+    }
 
-      .farm-type {
-        margin-top: 10px;
-        margin-left: -5px;
-      }
+    .farm-type,
+    .membership,
+    .license {
+      flex: 1 1 100%;
+    }
 
-      .membership {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 10px;
-        gap: 10px;
-      }
+    .farm-type {
+      margin-top: 10px;
+      margin-left: -5px;
+    }
 
-      .checkbox-membership {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 12px;
-        color: #797373;
-      }
+    .membership {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      gap: 10px;
+    }
 
-      .check-box {
-        display: flex;
-        align-items: center;
-        font-size: 13px;
-        color: #8d8a8a;
-        margin-top: 10px;
-        gap: 8px;
-        cursor: pointer;
-        margin-left: 40px;
-      }
+    .checkbox-membership {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: #797373;
+    }
 
-      .check-box input[type="checkbox"] {
-        appearance: none;
-        width: 15px;
-        height: 3px;
-        border: 1px solid #182512;
-        border-radius: 10px;
-        outline: none;
-        cursor: pointer;
-        position: relative;
-      }
+    .check-box {
+      display: flex;
+      align-items: center;
+      font-size: 13px;
+      color: #8d8a8a;
+      margin-top: 10px;
+      gap: 8px;
+      cursor: pointer;
+      margin-left: 40px;
+    }
 
-      .check-box input[type="checkbox"]:checked {
-        background-color: #1d4d2d;
-        border-color: #1d4d2d;
-      }
+    .check-box input[type="checkbox"] {
+      appearance: none;
+      width: 15px;
+      height: 3px;
+      border: 1px solid #182512;
+      border-radius: 10px;
+      outline: none;
+      cursor: pointer;
+      position: relative;
+    }
 
-      .check-box input[type="checkbox"]:checked::after {
-        content: "✓";
-        position: absolute;
-        color: white;
-        font-size: 12px;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-      }
+    .check-box input[type="checkbox"]:checked {
+      background-color: #1d4d2d;
+      border-color: #1d4d2d;
+    }
 
-      .check-box a {
-        color: #1d4d2d;
-        text-decoration: none;
-      }
+    .check-box input[type="checkbox"]:checked::after {
+      content: "✓";
+      position: absolute;
+      color: white;
+      font-size: 12px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
 
-      .check-box a:hover {
-        text-decoration: underline;
-      }
-    </style>
-  </head>
+    .check-box a {
+      color: #1d4d2d;
+      text-decoration: none;
+    }
 
-  <body>
+    .check-box a:hover {
+      text-decoration: underline;
+    }
+
+    #profile-upload {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <form id="signupForm" action="register_farmer.php" method="POST" enctype="multipart/form-data" onsubmit="return validateForm();">
+    <!-- Section 1 -->
     <div class="container-1" id="section-1">
       <div class="left-end">
         <h1>Create Account</h1>
@@ -408,73 +483,74 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
           listings, and grow your business with ease.
         </p>
         <div class="signup-container">
-          <form
-            id="signupForm"
-            action="register.php"
-            method="POST"
-            enctype="multipart/form-data"
-            onsubmit="return validateForm();"
-          >
-            <p>User Information</p>
 
-            <div class="box">
+          <p>User Information</p>
+
+          <div class="box">
+            <input
+              type="text"
+              name="username"
+              placeholder="Username"
+              required />
+          </div>
+
+          <div class="box">
+            <input
+              type="text"
+              name="first_name"
+              placeholder="First Name"
+              required />
+            <input
+              type="text"
+              name="last_name"
+              placeholder="Last Name"
+              required />
+          </div>
+
+          <div class="box">
+            <div class="dob">
+              <label for="dob">DOB / Age</label>
+              <input type="date" name="dob" id="dob" required />
+            </div>
+            <input
+              type="text"
+              name="nic"
+              placeholder="National ID Number / NIC"
+              required />
+          </div>
+
+          <div class="box">
+            <input
+              type="tel"
+              name="phone_number"
+              placeholder="Phone Number"
+              required />
+            <input type="email" name="email" placeholder="Email" required />
+          </div>
+
+          <div class="box">
+            <div class="password-toggle">
               <input
-                type="text"
-                name="name"
-                placeholder="Full Name"
-                required
-              />
+                type="password"
+                name="password"
+                id="password"
+                placeholder="Password"
+                required />
+              <i class="fas fa-eye" onclick="togglePassword('password')"></i>
             </div>
-
-            <div class="box">
-              <div class="dob">
-                <label for="dob">DOB / Age</label>
-                <input type="number" name="age"  required />
-              </div>
+            <div class="password-toggle">
               <input
-                type="tel"
-                name="phone_number"
-                placeholder="Phone Number"
-                required
-              />
+                type="password"
+                name="confirm_password"
+                id="confirm_password"
+                placeholder="Confirm Password"
+                required />
+              <i
+                class="fas fa-eye"
+                onclick="togglePassword('confirm_password')"></i>
             </div>
+          </div>
 
-            <div class="box">
-              <input
-                type="tel"
-                name="whatsapp_number"
-                placeholder="WhatsApp Number"
-                required
-              />
-              <input type="email" name="email" placeholder="Email" required />
-            </div>
-
-            <div class="box">
-              <div class="password-toggle">
-                <input
-                  type="password"
-                  name="password"
-                  id="password"
-                  placeholder="Password"
-                  required
-                />
-                <i class="fas fa-eye" onclick="togglePassword('password')"></i>
-              </div>
-              <div class="password-toggle">
-                <input
-                  type="password"
-                  name="confirm_password"
-                  id="confirm_password"
-                  placeholder="Confirm Password"
-                  required
-                />
-                <i
-                  class="fas fa-eye"
-                  onclick="togglePassword('confirm_password')"
-                ></i>
-              </div>
-            </div>
-          </form>
         </div>
       </div>
 
@@ -488,13 +564,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
           <p>If you already have an account, login here</p>
           <button
             class="btn-signin"
-            onclick="window.location.href='login.php';"
-          >
+            onclick="window.location.href='login.php';">
             Sign In
           </button>
         </div>
       </div>
     </div>
+    <!-- section 1 -->
 
     <!-- section 2 -->
     <div class="container-2" id="section-2" style="display: none">
@@ -502,8 +578,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <div class="profile-upload-container">
           <h1>Please Upload Your Profile Picture<br />here!</h1>
 
-          <label for="profile-upload" class="upload-circle">
-            <span class="plus">+</span>
+          <label for="profile-upload" class="upload-circle" id="upload-label">
+            <span class="plus" id="plus-icon">+</span>
           </label>
           <input
             type="file"
@@ -511,15 +587,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             name="profile_picture"
             accept="image/*"
             onchange="previewImage()"
-            hidden
-          />
+            hidden />
 
           <p class="upload-text">
             Choose your profile photo to personalize your account.
           </p>
 
           <label class="check-box">
-            <input type="checkbox" />
+            <input type="checkbox" name="terms" id="terms" required />
             I accept <a>terms and conditions</a> & <a>privacy policy</a>
           </label>
 
@@ -533,91 +608,158 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
       <div class="left-end">
         <div class="signup-container">
-          <form
-            id="signupForm"
-            action="register.php"
-            method="POST"
-            onsubmit="return validateForm();"
-          >
-            <!-- contact info -->
-            <div class="contact-info">
-              <p id="contact">Contact Information</p>
+          <!-- contact info -->
+          <div class="contact-info">
+            <p id="contact">Contact Information</p>
 
-              <div class="box">
-                <input
-                  type="text"
-                  name="address"
-                  placeholder="Address"
-                  required
-                />
-              </div>
+            <div class="box">
+              <input
+                type="text"
+                name="address"
+                placeholder="Address"
+                required />
+            </div>
 
-              <div class="box">
-                <input
-                  type="text"
-                  name="district"
-                  placeholder="District / Provice"
-                  required
-                />
-                <input
-                  type="text"
-                  name="city"
-                  placeholder="City / Town"
-                  required
-                />
-                
+            <div class="box">
+              <input
+                type="text"
+                name="district"
+                placeholder="District / Provice"
+                required />
+              <input
+                type="text"
+                name="city"
+                placeholder="City / Town"
+                required />
+              <input
+                type="number"
+                name="postal_code"
+                placeholder="Postal Code"
+                required />
+            </div>
+          </div>
+
+          <!-- profetional info -->
+          <div class="profetional-info">
+            <p id="profetional">Profetional Information</p>
+
+            <div class="box">
+              <div class="farm-type">
+                <label for="farm-type">Type of Farming</label>
+                <select name="farm-type" id="farm-type">
+                  <option value="rice">Paddy Farmers</option>
+                  <option value="vegetable">Vegetable Growers</option>
+                  <option value="tea">Tea Planters</option>
+                  <option value="fruit">Fruit Growers</option>
+                </select>
               </div>
             </div>
 
-            <!-- profetional info -->
-            <div class="profetional-info">
-              <p id="profetional">Profetional Information</p>
+            <div class="box">
+              <input
+                type="number"
+                name="experience"
+                placeholder="Years of Experience"
+                required />
             </div>
-          </form>
+
+            <div class="box">
+              <input type="number" name="land_size" placeholder="Land Size" />
+            </div>
+
+            <div class="box">
+              <div class="membership">
+                <label for="membership" class="membership-label">Membership in Agricultural Associations</label>
+                <div class="checkbox-membership">
+                  <input type="checkbox" id="membership" name="membership" />
+                  <label for="membership">Yes</label>
+                </div>
+              </div>
+            </div>
+
+            <div class="box">
+              <div class="license">
+                <label for="license">Certifications / Licenses</label>
+                <div class="display-box">
+                  <input type="file" id="license" name="license" />
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
-    </div>
+  </form>
 
-    <script>
-      function togglePassword(id) {
-        const input = document.getElementById(id);
-        input.type = input.type === "password" ? "text" : "password";
+  <script>
+    function togglePassword(id) {
+      const input = document.getElementById(id);
+      input.type = input.type === "password" ? "text" : "password";
+    }
+
+    function validateForm() {
+      const phone = document.getElementsByName("phone_number")[0].value;
+      const password = document.getElementById("password").value;
+      const confirmPassword = document.getElementById("confirm_password").value;
+
+      const phonePattern = /^[0-9]{10}$/;
+
+      if (!phonePattern.test(phone)) {
+        alert("Phone number must be 10 digits.");
+        return false;
       }
 
-      function validateForm() {
-        const form = document.forms["signupForm"];
-        const age = form["age"].value;
-        const phone = form["phone_number"].value;
-        const password = form["password"].value;
-        const confirmPassword = form["confirm_password"].value;
-
-        const phonePattern = /^[0-9]{10}$/;
-
-        if (age < 18 || age > 100) {
-          alert("Age must be between 18 and 100.");
-          return false;
-        }
-        if (!phonePattern.test(phone)) {
-          alert("Phone number must be 10 digits.");
-          return false;
-        }
-        if (password !== confirmPassword) {
-          alert("Passwords do not match.");
-          return false;
-        }
-
-        return true;
+      if (password !== confirmPassword) {
+        alert("Passwords do not match.");
+        return false;
       }
 
-      function nextSection() {
-        document.getElementById("section-1").style.display = "none";
-        document.getElementById("section-2").style.display = "flex";
-      }
+      return true;
+    }
 
-      function prevSection() {
-        document.getElementById("section-2").style.display = "none";
-        document.getElementById("section-1").style.display = "flex";
+
+    function nextSection() {
+      document.getElementById("section-1").style.display = "none";
+      document.getElementById("section-2").style.display = "flex";
+    }
+
+    function prevSection() {
+      document.getElementById("section-2").style.display = "none";
+      document.getElementById("section-1").style.display = "flex";
+    }
+
+    function previewImage() {
+      const input = document.getElementById("profile-upload");
+      const label = document.getElementById("upload-label");
+      const plusIcon = document.getElementById("plus-icon");
+
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          // Hide the +
+          plusIcon.style.display = "none";
+
+          // Remove previous img if exists
+          const oldImg = label.querySelector("img");
+          if (oldImg) label.removeChild(oldImg);
+
+          // Add new image
+          const img = document.createElement("img");
+          img.src = e.target.result;
+          img.style.width = "100%";
+          img.style.height = "100%";
+          img.style.borderRadius = "50%";
+          img.style.objectFit = "cover";
+          img.style.position = "absolute";
+          img.style.top = 0;
+          img.style.left = 0;
+
+          label.appendChild(img);
+        };
+        reader.readAsDataURL(input.files[0]);
       }
-    </script>
-  </body>
+    }
+  </script>
+</body>
+
 </html>
