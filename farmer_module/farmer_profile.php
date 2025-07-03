@@ -1,6 +1,6 @@
 <?php
 session_start();
-include('db_connect.php');
+include('../backend/db_connect.php');
 
 if (!isset($_SESSION['farmer_id'])) {
   header("Location: login.php");
@@ -10,7 +10,7 @@ if (!isset($_SESSION['farmer_id'])) {
 $farmer_id = $_SESSION['farmer_id'];
 
 // Get farmer data
-$query = "SELECT * FROM farmers WHERE farmer_id='$farmer_id'";
+$query = "SELECT * FROM farmers WHERE id='$farmer_id'";
 $result = $conn->query($query);
 if ($result->num_rows == 1) {
   $farmer = $result->fetch_assoc();
@@ -18,9 +18,9 @@ if ($result->num_rows == 1) {
   die("Farmer not found.");
 }
 
-$posts = $conn->query("SELECT COUNT(*) as total FROM posts WHERE farmer_id='$farmer_id' AND status='active'")->fetch_assoc()['total'];
-$buyers = $conn->query("SELECT COUNT(DISTINCT buyer_id) as total FROM inquiries WHERE farmer_id='$farmer_id'")->fetch_assoc()['total'];
-$sold = $conn->query("SELECT COUNT(*) as total FROM posts WHERE farmer_id='$farmer_id' AND status='sold'")->fetch_assoc()['total'];
+$posts = $conn->query("SELECT COUNT(*) as total FROM listings WHERE id='$farmer_id' AND is_available='active'")->fetch_assoc()['total'];
+//$buyers = $conn->query("SELECT COUNT(DISTINCT buyer_id) as total FROM inquiries WHERE farmer_id='$farmer_id'")->fetch_assoc()['total'];
+//$sold = $conn->query("SELECT COUNT(*) as total FROM posts WHERE farmer_id='$farmer_id' AND status='sold'")->fetch_assoc()['total'];
 
 // Profile picture
 $profilePicture = !empty($farmer['profile_picture']) ? 'uploads/' . $farmer['profile_picture'] : 'default-avatar.png';

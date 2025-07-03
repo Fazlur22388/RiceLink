@@ -6,109 +6,76 @@ $errors = [];
 $created_at = date("Y-m-d H:i:s");
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-  // Sanitize inputs
-  function clean($data, $conn) {
-    return mysqli_real_escape_string($conn, trim($data));
-  }
-
-  // Personal Details
-  $username = clean($_POST['username'], $conn);
-  $first_name = clean($_POST['first_name'], $conn);
-  $last_name = clean($_POST['last_name'], $conn);
-  $dob = $_POST['dob'];
-  $nic = clean($_POST['nic'], $conn);
-  $phone = clean($_POST['phone_number'], $conn);
-  $email = clean($_POST['email'], $conn);
-  $password = $_POST['password'];
-  $confirm_password = $_POST['confirm_password'];
-
-  // Contact Details
-  $address = clean($_POST['address'], $conn);
-  $district = clean($_POST['district'], $conn);
-  $city = clean($_POST['city'], $conn);
-  $postal_code = clean($_POST['postal_code'], $conn);
-
-  // Professional Details
-  $farm_type = clean($_POST['farm-type'], $conn);
-  $experience = clean($_POST['experience'], $conn);
-  $land_size = clean($_POST['land_size'], $conn);
-  $membership = isset($_POST['membership']) ? 'Yes' : 'No';
-
-  // Validate
-  if (empty($username)) $errors['username'] = "Username is required.";
-  if (empty($first_name)) $errors['first_name'] = "First name is required.";
-  if (empty($last_name)) $errors['last_name'] = "Last name is required.";
-  if (empty($dob)) $errors['dob'] = "Date of birth is required.";
-  if (empty($nic)) $errors['nic'] = "NIC is required.";
-  if (empty($phone) || !preg_match('/^\d{10}$/', $phone)) $errors['phone_number'] = "Enter valid 10-digit phone number.";
-  if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) $errors['email'] = "Enter a valid email.";
-  if (empty($password) || strlen($password) < 6) $errors['password'] = "Password must be at least 6 characters.";
-  if ($password !== $confirm_password) $errors['confirm_password'] = "Passwords do not match.";
-
-  if (empty($address)) $errors['address'] = "Address is required.";
-  if (empty($district)) $errors['district'] = "District is required.";
-  if (empty($city)) $errors['city'] = "City is required.";
-  if (empty($postal_code)) $errors['postal_code'] = "Postal code is required.";
-
-  // Check for duplicate email
-  $checkEmail = $conn->prepare("SELECT id FROM farmers WHERE email = ?");
-  $checkEmail->bind_param("s", $email);
-  $checkEmail->execute();
-  $checkEmail->store_result();
-  if ($checkEmail->num_rows > 0) {
-    $errors['email'] = "Email already exists.";
-  }
-  $checkEmail->close();
-
-  // Handle image upload
-  $profileImagePath = '';
-  if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] == 0) {
-    $targetDir = "uploads/";
-    $fileName = basename($_FILES["profile_picture"]["name"]);
-    $targetFile = $targetDir . uniqid() . "_" . $fileName;
-    $imageFileType = strtolower(pathinfo($targetFile, PATHINFO_EXTENSION));
-    $allowedTypes = ['jpg', 'jpeg', 'png', 'gif'];
-
-    if (!in_array($imageFileType, $allowedTypes)) {
-      $errors['profile_picture'] = "Only JPG, PNG, or GIF files allowed.";
-    } else {
-      if (!move_uploaded_file($_FILES["profile_picture"]["tmp_name"], $targetFile)) {
-        $errors['profile_picture'] = "Image upload failed.";
-      } else {
-        $profileImagePath = $targetFile;
-      }
-    }
-  } else {
-    $errors['profile_picture'] = "Profile picture is required.";
-  }
-
-  // Insert data
-  if (empty($errors)) {
-    $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-
-    $stmt = $conn->prepare("INSERT INTO farmers (username, first_name, last_name, dob, nic, phone, email, password, address, district, city, postal_code, farm_type, experience, land_size, membership, profile_picture, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("ssssssssssssssssss",
-      $username, $first_name, $last_name, $dob, $nic, $phone, $email, $hashed_password,
-      $address, $district, $city, $postal_code,
-      $farm_type, $experience, $land_size, $membership, $profileImagePath, $created_at
-    );
-
-    if ($stmt->execute()) {
-      $_SESSION['farmer_id'] = $stmt->insert_id;
-      echo "<script>alert('Registration successful! You can now log in.'); window.location='login_farmer.html';</script>";
-    } else {
-      echo "Error: " . $stmt->error;
+    function clean($data, $conn) {
+        return mysqli_real_escape_string($conn, trim($data));
     }
 
-    $stmt->close();
-  } else {
-    echo "<script>alert('Please fix the form errors.'); window.history.back();</script>";
-  }
+    $name = clean($_POST['name'], $conn);
+    $age = intval($_POST['age']);
+    $address = clean($_POST['address'], $conn);
+    $city = clean($_POST['city'], $conn);
+    $district = clean($_POST['district'], $conn);
+    $phone = clean($_POST['phone_number'], $conn);
+    $whatsapp = clean($_POST['whatsapp_number'], $conn);
+    $email = clean($_POST['email'], $conn);
+    $password = $_POST['password'];
+    $confirm_password = $_POST['confirm_password'];
 
-  $conn->close();
+    if (empty($name)) $errors[] = "Name is required.";
+    if ($age < 18 || $age > 100) $errors[] = "Age must be between 18 and 100.";
+    if (empty($address)) $errors[] = "Address is required.";
+    if (empty($city)) $errors[] = "City is required.";
+    if (empty($district)) $errors[] = "District is required.";
+    if (!preg_match('/^\d{10}$/', $phone)) $errors[] = "Valid phone is required.";
+    if (!preg_match('/^\d{10}$/', $whatsapp)) $errors[] = "Valid WhatsApp number required.";
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = "Valid email is required.";
+    if (strlen($password) < 6) $errors[] = "Password must be at least 6 characters.";
+    if ($password !== $confirm_password) $errors[] = "Passwords do not match.";
+
+    // Check email
+    $check = $conn->prepare("SELECT id FROM farmers WHERE email = ?");
+    $check->bind_param("s", $email);
+    $check->execute();
+    $check->store_result();
+    if ($check->num_rows > 0) $errors[] = "Email already exists.";
+    $check->close();
+
+    // Upload profile picture
+    $profile_picture = "";
+    if ($_FILES['profile_picture']['error'] === UPLOAD_ERR_OK) {
+        $targetDir = "../product_pics/";
+        if (!is_dir($targetDir)) mkdir($targetDir, 0777, true);
+        $fileName = time() . "_" . basename($_FILES['profile_picture']['name']);
+        $uploadPath = $targetDir . $fileName;
+        if (move_uploaded_file($_FILES['profile_picture']['tmp_name'], $uploadPath)) {
+            $profile_picture = $fileName;
+        } else {
+            $errors[] = "Image upload failed.";
+        }
+    } else {
+        $errors[] = "Profile picture is required.";
+    }
+
+    // Insert to DB
+    if (empty($errors)) {
+        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+        $stmt = $conn->prepare("INSERT INTO farmers (name, age, address, city, district, phone, whatsapp, email, password, created_at, profile_picture)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("sisssssss", $name, $age, $address, $city, $district, $phone, $whatsapp, $email, $hashed_password, $created_at, $profile_picture);
+
+        if ($stmt->execute()) {
+            $_SESSION['farmer_id'] = $stmt->insert_id;
+            echo "<script>alert('Registration successful!'); window.location='login.php';</script>";
+        } else {
+            echo "DB Error: " . $stmt->error;
+        }
+        $stmt->close();
+    } else {
+        echo "<script>alert('Please fix form errors');</script>";
+    }
 }
 ?>
+
 
 
 <!DOCTYPE html>
@@ -445,6 +412,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             id="signupForm"
             action="register.php"
             method="POST"
+            enctype="multipart/form-data"
             onsubmit="return validateForm();"
           >
             <p>User Information</p>
@@ -452,23 +420,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <div class="box">
               <input
                 type="text"
-                name="username"
-                placeholder="Username"
-                required
-              />
-            </div>
-
-            <div class="box">
-              <input
-                type="text"
-                name="first_name"
-                placeholder="First Name"
-                required
-              />
-              <input
-                type="text"
-                name="last_name"
-                placeholder="Last Name"
+                name="name"
+                placeholder="Full Name"
                 required
               />
             </div>
@@ -476,12 +429,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <div class="box">
               <div class="dob">
                 <label for="dob">DOB / Age</label>
-                <input type="date" name="dob" id="dob" required />
+                <input type="number" name="age"  required />
               </div>
               <input
-                type="text"
-                name="nic"
-                placeholder="National ID Number / NIC"
+                type="tel"
+                name="phone_number"
+                placeholder="Phone Number"
                 required
               />
             </div>
@@ -489,8 +442,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <div class="box">
               <input
                 type="tel"
-                name="phone_number"
-                placeholder="Phone Number"
+                name="whatsapp_number"
+                placeholder="WhatsApp Number"
                 required
               />
               <input type="email" name="email" placeholder="Email" required />
@@ -535,7 +488,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
           <p>If you already have an account, login here</p>
           <button
             class="btn-signin"
-            onclick="window.location.href='login_farmer.html';"
+            onclick="window.location.href='login.php';"
           >
             Sign In
           </button>
@@ -612,64 +565,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                   placeholder="City / Town"
                   required
                 />
-                <input
-                  type="number"
-                  name="postal_code"
-                  placeholder="Postal Code"
-                  required
-                />
+                
               </div>
             </div>
 
             <!-- profetional info -->
             <div class="profetional-info">
               <p id="profetional">Profetional Information</p>
-
-              <div class="box">
-                <div class="farm-type">
-                  <label for="farm-type">Type of Farming</label>
-                  <select name="farm-type" id="farm-type">
-                    <option value="rice">Paddy Farmers</option>
-                    <option value="vegetable">Vegetable Growers</option>
-                    <option value="tea">Tea Planters</option>
-                    <option value="fruit">Fruit Growers</option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="box">
-                <input
-                  type="number"
-                  name="experience"
-                  placeholder="Years of Experience"
-                  required
-                />
-              </div>
-
-              <div class="box">
-                <input type="number" name="land_size" placeholder="Land Size" />
-              </div>
-
-              <div class="box">
-                <div class="membership">
-                  <label for="membership" class="membership-label"
-                    >Membership in Agricultural Associations</label
-                  >
-                  <div class="checkbox-membership">
-                    <input type="checkbox" id="membership" name="membership" />
-                    <label for="membership">Yes</label>
-                  </div>
-                </div>
-              </div>
-
-              <div class="box">
-                <div class="license">
-                  <label for="license">Certifications / Licenses</label>
-                  <div class="display-box">
-                    <input type="file" id="license" name="license" />
-                  </div>
-                </div>
-              </div>
             </div>
           </form>
         </div>

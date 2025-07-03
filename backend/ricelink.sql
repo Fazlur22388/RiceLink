@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 27, 2025 at 06:26 PM
+-- Generation Time: Jun 24, 2025 at 09:36 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -85,19 +85,22 @@ CREATE TABLE `farmers` (
   `name` varchar(100) NOT NULL,
   `age` int(5) NOT NULL,
   `address` varchar(250) NOT NULL,
+  `City` text NOT NULL,
+  `District` text NOT NULL,
   `phone` int(10) NOT NULL,
   `whatsapp` int(10) NOT NULL,
   `email` varchar(100) NOT NULL,
   `password` varchar(255) NOT NULL,
-  `created_at` time NOT NULL DEFAULT current_timestamp()
+  `created_at` time NOT NULL DEFAULT current_timestamp(),
+  `profile_picture` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `farmers`
 --
 
-INSERT INTO `farmers` (`id`, `name`, `age`, `address`, `phone`, `whatsapp`, `email`, `password`, `created_at`) VALUES
-(2, 'Fazlur Rahman', 22, '219/2 ambakotuwa illangawatta kahatapitiya Gampola', 762897670, 745587469, 'fazlur223@gmail.com', '$2y$10$8lYEDwJyFijLAW68L.Q1tuCvN4zzI79paXMX8kDRlUp6atr/C6zHa', '09:46:16');
+INSERT INTO `farmers` (`id`, `name`, `age`, `address`, `City`, `District`, `phone`, `whatsapp`, `email`, `password`, `created_at`, `profile_picture`) VALUES
+(2, 'Fazlur Rahman', 22, '219/2 ambakotuwa illangawatta kahatapitiya Gampola', '', '', 762897670, 745587469, 'fazlur223@gmail.com', '$2y$10$8lYEDwJyFijLAW68L.Q1tuCvN4zzI79paXMX8kDRlUp6atr/C6zHa', '09:46:16', NULL);
 
 -- --------------------------------------------------------
 
@@ -120,6 +123,13 @@ CREATE TABLE `listings` (
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `listings`
+--
+
+INSERT INTO `listings` (`id`, `farmer_id`, `title`, `description`, `rice_type`, `quantity`, `price_per_kg`, `harvest_date`, `image_url`, `is_available`, `created_at`, `updated_at`) VALUES
+(8, 2, 'Keeri samba', 'High quality', 'Keeri Samba', 100.00, 125.00, '2025-06-25', 'product_pics/1750692673_test 2.jpeg', 1, '2025-06-23 15:31:13', '2025-06-23 15:31:13');
+
 -- --------------------------------------------------------
 
 --
@@ -136,6 +146,13 @@ CREATE TABLE `messages` (
   `is_read` tinyint(1) DEFAULT 0,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `messages`
+--
+
+INSERT INTO `messages` (`id`, `buyer_id`, `farmer_id`, `listing_id`, `message`, `sent_by`, `is_read`, `created_at`) VALUES
+(1, 1, 2, NULL, 'im interested in your product', 'buyer', 0, '2025-06-23 13:59:02');
 
 --
 -- Indexes for dumped tables
@@ -215,13 +232,13 @@ ALTER TABLE `farmers`
 -- AUTO_INCREMENT for table `listings`
 --
 ALTER TABLE `listings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `messages`
 --
 ALTER TABLE `messages`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- Constraints for dumped tables
