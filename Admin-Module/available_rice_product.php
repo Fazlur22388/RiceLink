@@ -1,6 +1,6 @@
 <?php
 session_start();
-include('db_connect.php');
+include('../backend/db_connect.php');
 
 if (!isset($_SESSION['admin_id'])) {
     header("Location: admin-login.php");
@@ -22,7 +22,7 @@ if (!isset($_SESSION['admin_id'])) {
             background: linear-gradient(to right, #e0f7fa, #ffffff);
             padding: 20px;
             margin: 0;
-            background-image: url('images/rice.jpg'); /* Adjust path if needed */
+
             background-size: cover;
             background-repeat: no-repeat;
             background-attachment: fixed;
@@ -101,6 +101,52 @@ if (!isset($_SESSION['admin_id'])) {
             color: #7f8c8d;
             margin-top: 40px;
         }
+
+        .grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.rice-card {
+  background-color: #fff;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 0 8px rgba(0,0,0,0.05);
+  text-align: center;
+  transition: transform 0.2s;
+}
+
+.rice-card:hover {
+  transform: translateY(-5px);
+}
+
+.rice-card img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.rice-card h4 {
+  margin: 10px 0 5px;
+  font-size: 18px;
+  color: #1d4d2d;
+}
+
+.rice-card p {
+  color: #555;
+  font-weight: bold;
+}
+
+.no-data {
+  text-align: center;
+  color: #999;
+  font-style: italic;
+  margin-top: 20px;
+}
+
     </style>
 </head>
 <body>
@@ -108,16 +154,16 @@ if (!isset($_SESSION['admin_id'])) {
 <h2>Available Rice Products</h2>
 <div class="grid-container">
 <?php
-$sql = "SELECT * FROM rice_prices ORDER BY id DESC";
+$sql = "SELECT * FROM listings ORDER BY id DESC";
 $result = $conn->query($sql);
 
 if ($result->num_rows > 0):
     while ($row = $result->fetch_assoc()):
 ?>
     <div class="rice-card">
-        <img src="<?php echo htmlspecialchars($row['image_path']); ?>" alt="Rice Image">
-        <h4><?php echo htmlspecialchars($row['rice_variety']); ?></h4>
-        <p>Rs.<?php echo number_format($row['max_price_per_kg'], 2); ?>/kg</p>
+        <img src="../<?php echo htmlspecialchars($row['image_url']); ?>" alt="Rice Image">
+        <h4><?php echo htmlspecialchars($row['title']); ?></h4>
+        <p>Rs.<?php echo number_format($row['price_per_kg'], 2); ?>/kg</p>
     </div>
 <?php
     endwhile;

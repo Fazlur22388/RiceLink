@@ -257,6 +257,28 @@ $active_posts_count = mysqli_fetch_assoc(mysqli_query($conn, $query_active_posts
       object-fit: cover;
       margin-bottom: 8px;
     }
+
+    .grid-container {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.rice-card {
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 15px;
+  width: 200px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.rice-card img {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 5px;
+}
+
   </style>
 </head>
 
@@ -318,18 +340,28 @@ $active_posts_count = mysqli_fetch_assoc(mysqli_query($conn, $query_active_posts
     </section>
 
     <section class="section farmers-section">
-      <h2>Other Farmers</h2>
-      <div class="farmer-list">
-        <?php while ($farmer = mysqli_fetch_assoc($other_farmers_result)) { ?>
-          <div class="farmer-card" onclick="window.location.href='view_farmer_posts.php?id=<?= $farmer['id'] ?>'">
-            <img src="../<?= htmlspecialchars($farmer['image_url']) ?>" alt="<?= htmlspecialchars($farmer['username']) ?>" />
-            <p><?= htmlspecialchars($farmer['username']) ?></p>
-          </div>
-        <?php } ?>
-      </div>
-    </section>
+  <h2>All listings</h2>
+  <div class="grid-container">
+    <?php
+    $sql = "SELECT * FROM listings ORDER BY id DESC";
+    $result = $conn->query($sql);
 
-    
+    if ($result->num_rows > 0):
+      while ($row = $result->fetch_assoc()):
+    ?>
+      <div class="rice-card">
+        <img src="../<?php echo htmlspecialchars($row['image_url']); ?>" alt="Rice Image">
+        <h4><?php echo htmlspecialchars($row['title']); ?></h4>
+        <p>Rs. <?php echo number_format($row['price_per_kg'], 2); ?>/kg</p>
+      </div>
+    <?php endwhile; ?>
+    <?php else: ?>
+      <p class="no-data">No rice data found.</p>
+    <?php endif; ?>
+  </div> <!-- close grid-container -->
+</section>
+
+
 
   </main>
   <script type="text/javascript">

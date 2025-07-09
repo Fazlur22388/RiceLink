@@ -14,7 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $quantity = floatval($_POST['quantity']);
     $price_per_kg = floatval($_POST['price_per_kg']);
     $harvest_date = $_POST['harvest_date'];
-    $address = trim($_POST['farm_address']);
+    $location = trim($_POST['farm_address']);
     $description = trim($_POST['description']);
     $is_available = 1;
 
@@ -37,11 +37,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // ✅ Moved inside POST
-    $sql = "INSERT INTO listings (farmer_id, title, description, rice_type, quantity, price_per_kg, harvest_date, image_url, is_available) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    $sql = "INSERT INTO listings (farmer_id, title, description, rice_type, quantity, price_per_kg, harvest_date, location, image_url, is_available) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?,?, ?)";
 
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("isssddssi", $farmer_id, $title, $description, $rice_type, $quantity, $price_per_kg, $harvest_date, $image_url, $is_available);
+    $stmt->bind_param("isssddssi", $farmer_id, $title, $description, $rice_type, $quantity, $price_per_kg, $harvest_date, $location, $image_url, $is_available);
 
     if ($stmt->execute()) {
         header("Location: farmer_dashboard.php?msg=success");

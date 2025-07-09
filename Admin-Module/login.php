@@ -3,6 +3,8 @@ session_start();
 include('db_connect.php');
 error_reporting(0);
 
+// Define enteredEmail for the form field
+$enteredEmail = $_SESSION['entered_email'] ?? '';
 
 // Login logic
 if (isset($_POST['log'])) {
@@ -19,9 +21,10 @@ if (isset($_POST['log'])) {
     $stmt->close();
 
     if ($admin) {
-        if ($password === $admin['password']) {
+        if ($password === $admin['password']) {  // You can switch to password_verify() if using hashes
             $_SESSION['admin_id'] = $admin['id'];
             $_SESSION['role'] = 'admin';
+            unset($_SESSION['login_error']); // clear old errors
             echo "<script>window.location.href = 'admin-dashboard.php';</script>";
             exit();
         } else {
@@ -30,11 +33,9 @@ if (isset($_POST['log'])) {
     } else {
         $_SESSION['login_error'] = "Admin account not found.";
     }
-
-    echo "<script>window.location.href = 'login.php';</script>";
-    exit();
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -150,7 +151,8 @@ if (isset($_POST['log'])) {
             <div class="form-group">
                 <label for="email">Email Address</label>
                 <input type="email" name="email" id="email" required autofocus
-                       value="<?php echo htmlspecialchars($enteredEmail); ?>">
+       value="<?php echo htmlspecialchars($enteredEmail); ?>">
+
             </div>
 
             <div class="form-group">
@@ -160,9 +162,11 @@ if (isset($_POST['log'])) {
 
             <button type="submit" name="log" class="btn">Login</button>
 
-            <?php if (!empty($errorMessage)): ?>
-                <div class="error-msg"><?php echo htmlspecialchars($errorMessage); ?></div>
+            <?php if (!empty($_SESSION['login_error'])): ?>
+                <div class="error-msg"><?php echo htmlspecialchars($_SESSION['login_error']); ?></div>
+                <?php unset($_SESSION['login_error']); ?>
             <?php endif; ?>
+
         </form>
     </div>
 </body>

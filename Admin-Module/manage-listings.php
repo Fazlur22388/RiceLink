@@ -23,7 +23,7 @@ $result = $conn->query("SELECT * FROM listings ORDER BY created_at DESC");
         body { 
             font-family: Arial, sans-serif; 
             padding: 20px;
-            background-image: url('images/rice.jpg'); /* Adjust path if needed */
+
             background-size: cover;
             background-repeat: no-repeat;
             background-attachment: fixed;
@@ -88,7 +88,7 @@ $result = $conn->query("SELECT * FROM listings ORDER BY created_at DESC");
         <tr>
             <th>ID</th>
             <th>Farmer ID</th>
-            <th>Variety</th>
+            <th>Title</th>
             <th>Quantity (kg)</th>
             <th>Price/kg</th>
             <th>Location</th>
@@ -101,14 +101,14 @@ $result = $conn->query("SELECT * FROM listings ORDER BY created_at DESC");
     </thead>
     <tbody>
         <?php while ($row = $result->fetch_assoc()): ?>
-            <?php $status = strtolower(trim($row['status'])); ?>
+            <?php $status = strtolower(trim($row['is_available'])); ?>
             <tr>
                 <td><?= $row['id'] ?></td>
                 <td><?= $row['farmer_id'] ?></td>
-                <td><?= htmlspecialchars($row['variety_name']) ?></td>
-                <td><?= $row['quantity_kg'] ?></td>
-                <td>$<?= number_format($row['price_per_kg'], 2) ?></td>
-                <td><?= htmlspecialchars($row['stock_location']) ?></td>
+                <td><?= htmlspecialchars($row['title']) ?></td>
+                <td><?= $row['quantity'] ?></td>
+                <td><?= number_format($row['price_per_kg'], 2) ?></td>
+                <td><?= htmlspecialchars($row['location']) ?></td>
                 <td><?= htmlspecialchars($row['description']) ?></td>
                 <td>
                     <?php if (!empty($row['image_path'])): ?>
@@ -118,7 +118,7 @@ $result = $conn->query("SELECT * FROM listings ORDER BY created_at DESC");
                 <td><?= ucfirst($status) ?></td>
                 <td><?= $row['created_at'] ?></td>
                 <td>
-                    <?php if ($status === 'pending'): ?>
+                    <?php if ($status == 1): ?>
                         <form method="post" action="approve_listing.php" onsubmit="return confirm('Approve this listing?');">
                             <input type="hidden" name="id" value="<?= $row['id'] ?>">
                             <input type="hidden" name="token" value="<?= $_SESSION['csrf_token'] ?>">

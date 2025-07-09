@@ -12,7 +12,7 @@ if (!isset($_SESSION['admin_id'])) {
 $buyers = $conn->query("SELECT id, name, email FROM buyers ORDER BY id DESC");
 
 // Fetch farmers
-$farmers = $conn->query("SELECT id, name, email FROM farmers ORDER BY id DESC");
+$farmers = $conn->query("SELECT id, username, email FROM farmers ORDER BY id DESC");
 ?>
 
 <!DOCTYPE html>
@@ -111,7 +111,7 @@ $farmers = $conn->query("SELECT id, name, email FROM farmers ORDER BY id DESC");
                     <?php while ($farmer = $farmers->fetch_assoc()): ?>
                         <tr>
                             <td><?php echo $farmer['id']; ?></td>
-                            <td><?php echo htmlspecialchars($farmer['name']); ?></td>
+                            <td><?php echo htmlspecialchars($farmer['username']); ?></td>
                             <td><?php echo htmlspecialchars($farmer['email']); ?></td>
                             <td>
                                 <a class="remove-link" href="remove_farmer.php?id=<?php echo $farmer['id']; ?>" onclick="return confirm('Are you sure you want to remove this farmer?');">
