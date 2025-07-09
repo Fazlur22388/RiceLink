@@ -3,106 +3,58 @@ session_start();
 include('../backend/db_connect.php');
 
 if (!isset($_SESSION['farmer_id'])) {
-  header("Location: login.php");
-  exit();
+    header("Location: login_farmer.php");
+    exit();
 }
 
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
-  // Initialize variables
-  $farmer_id = $_SESSION['farmer_id'];
-  $title = trim($_POST['product-type']);
-  $description = trim($_POST['description'] ?? '');
-  $rice_type = trim($_POST['rice_type']);
-  $quantity = (float) $_POST['quantity'];
-  $price = (float) $_POST['price_per_kg'];
-  $harvest_date = $_POST['harvest_date'];
-  $farm_address = trim($_POST['farm_address']);
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $farmer_id = $_SESSION['farmer_id'];
+    $title = trim($_POST['product-type']);
+    $rice_type = trim($_POST['rice_type']);
+    $quantity = floatval($_POST['quantity']);
+    $price_per_kg = floatval($_POST['price_per_kg']);
+    $harvest_date = $_POST['harvest_date'];
+    $address = trim($_POST['farm_address']);
+    $description = trim($_POST['description']);
+    $is_available = 1;
 
-  // Validate required fields
-  if (empty($title) || empty($rice_type) || empty($quantity) || empty($price) || empty($harvest_date) || empty($farm_address)) {
-    header("Location: add_posts.php?msg=Please fill all required fields");
-    exit();
-  }
+    $image_url = "";
+    $uploadDir = __DIR__ . '/../product_pics/';
+    $relativePath = 'product_pics/';
+    
+    if (!is_dir($uploadDir)) {
+        mkdir($uploadDir, 0777, true);
+    }
 
-  // Handle file upload
-  if (!isset($_FILES['product_picture']) || $_FILES['product_picture']['error'] !== UPLOAD_ERR_OK) {
-    header("Location: add_posts.php?msg=Please upload a product image");
-    exit();
-  }
+    $fileName = time() . '_' . basename($_FILES['product_picture']['name']);
+    $uploadPath = $uploadDir . $fileName;
 
-  // Validate image file
-  $allowed_types = ['image/jpeg', 'image/png', 'image/gif'];
-  $file_info = finfo_open(FILEINFO_MIME_TYPE);
-  $mime_type = finfo_file($file_info, $_FILES['product_picture']['tmp_name']);
-  finfo_close($file_info);
+    if (move_uploaded_file($_FILES['product_picture']['tmp_name'], $uploadPath)) {
+        $image_url = $relativePath . $fileName;
+    } else {
+        echo "Image upload failed.";
+        exit();
+    }
 
-  if (!in_array($mime_type, $allowed_types)) {
-    header("Location: add_posts.php?msg=Only JPEG, PNG and GIF images are allowed");
-    exit();
-  }
-
-  // Create uploads directory if it doesn't exist
-  if (!file_exists('uploads')) {
-    mkdir('uploads', 0777, true);
-  }
-
-  // Generate unique filename
-  $file_ext = pathinfo($_FILES['product_picture']['name'], PATHINFO_EXTENSION);
-  $img_name = uniqid('img_', true) . '.' . $file_ext;
-  $img_path = "uploads/" . $img_name;
-
-  if (!move_uploaded_file($_FILES['product_picture']['tmp_name'], $img_path)) {
-    header("Location: add_posts.php?msg=Failed to upload image");
-    exit();
-  }
-
-  // Insert into listings
-  try {
-    $sql = "INSERT INTO listings (
-                    farmer_id, title, description, rice_type,
-                    quantity, price_per_kg, harvest_date,
-                    image_url, farm_address, created_at, is_available
-                )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), 1)";
+    // ✅ Moved inside POST
+    $sql = "INSERT INTO listings (farmer_id, title, description, rice_type, quantity, price_per_kg, harvest_date, image_url, is_available) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     $stmt = $conn->prepare($sql);
-    if (!$stmt) {
-      throw new Exception("Prepare failed: " . $conn->error);
+    $stmt->bind_param("isssddssi", $farmer_id, $title, $description, $rice_type, $quantity, $price_per_kg, $harvest_date, $image_url, $is_available);
+
+    if ($stmt->execute()) {
+        header("Location: farmer_dashboard.php?msg=success");
+        exit();
+    } else {
+        echo "Error: " . $stmt->error;
     }
-
-    $stmt->bind_param(
-      "isssddsss",
-      $farmer_id,
-      $title,
-      $description,
-      $rice_type,
-      $quantity,
-      $price,
-      $harvest_date,
-      $img_path,
-      $farm_address
-    );
-
-    if (!$stmt->execute()) {
-      throw new Exception("Execute failed: " . $stmt->error);
-    }
-
-    header("Location: farmer_dashboard.php?msg=success");
-    exit();
-  } catch (Exception $e) {
-    // Log the error
-    error_log("Database error: " . $e->getMessage());
-
-    // Delete the uploaded file if the database operation failed
-    if (file_exists($img_path)) {
-      unlink($img_path);
-    }
-
-    header("Location: add_posts.php?msg=Error saving your data. Please try again.");
-    exit();
-  }
 }
+
+
 ?>
+
+
 
 
 <!DOCTYPE html>
@@ -503,12 +455,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                   placeholder="Location / Farm Address" required />
               </div>
 
-              <div class="display-group">
-                <div class="certification">
-                  <label>Organic Certification</label>
-                  <input type="file" name="Certification" />
-                </div>
-              </div>
+              
             </div>
           </div>
         </div>

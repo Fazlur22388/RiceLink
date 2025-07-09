@@ -30,6 +30,11 @@ $query_messages = "SELECT m.message AS content, m.created_at AS timestamp, b.nam
                    ORDER BY m.created_at DESC";
 $messages_result = mysqli_query($conn, $query_messages);
 
+// Get the latest listings
+$latest_listings_sql = "SELECT * FROM listings ORDER BY created_at DESC LIMIT 6";
+$latest_listings = $conn->query($latest_listings_sql);
+
+
 $query_active_posts = "SELECT COUNT(*) AS total FROM listings WHERE farmer_id = $user_id";
 $active_posts_count = mysqli_fetch_assoc(mysqli_query($conn, $query_active_posts))['total'];
 ?>
@@ -277,7 +282,7 @@ $active_posts_count = mysqli_fetch_assoc(mysqli_query($conn, $query_active_posts
   <main class="main-content">
     <div class="header">
       <h1>Welcome, <?= htmlspecialchars($username) ?></h1>
-      <img src="<?= htmlspecialchars($profile_picture) ?>" alt="Profile" />
+      <img src=".uploads<?= htmlspecialchars($profile_picture) ?>" alt="Profile" />
     </div>
 
     <div class="stats">
@@ -292,24 +297,12 @@ $active_posts_count = mysqli_fetch_assoc(mysqli_query($conn, $query_active_posts
       <button class="btn-add" type="submit">+ Add New Rice Product</button>
     </form>
 
-    <section class="section farmers-section">
-      <h2>Other Farmers</h2>
-      <div class="farmer-list">
-        <?php while ($farmer = mysqli_fetch_assoc($other_farmers_result)) { ?>
-          <div class="farmer-card" onclick="window.location.href='view_farmer_posts.php?id=<?= $farmer['id'] ?>'">
-            <img src="<?= htmlspecialchars($farmer['profile_picture']) ?>" alt="<?= htmlspecialchars($farmer['username']) ?>" />
-            <p><?= htmlspecialchars($farmer['username']) ?></p>
-          </div>
-        <?php } ?>
-      </div>
-    </section>
-
     <section class="section">
       <h2>My Posts</h2>
       <div class="post-grid">
         <?php while ($post = mysqli_fetch_assoc($posts_result)) { ?>
           <div class="post">
-            <img src="<?= htmlspecialchars($post['image_url']) ?>" alt="Rice Image">
+           <img src="../<?= htmlspecialchars($post['image_url']) ?>" alt="Rice Image">
             <h3><?= htmlspecialchars($post['title']) ?></h3>
             <p>Quantity: <?= htmlspecialchars($post['quantity']) ?> kg</p>
             <p>Rs <?= number_format($post['price_per_kg'], 2) ?> per kg</p>
@@ -323,6 +316,20 @@ $active_posts_count = mysqli_fetch_assoc(mysqli_query($conn, $query_active_posts
         <?php } ?>
       </div>
     </section>
+
+    <section class="section farmers-section">
+      <h2>Other Farmers</h2>
+      <div class="farmer-list">
+        <?php while ($farmer = mysqli_fetch_assoc($other_farmers_result)) { ?>
+          <div class="farmer-card" onclick="window.location.href='view_farmer_posts.php?id=<?= $farmer['id'] ?>'">
+            <img src="../<?= htmlspecialchars($farmer['image_url']) ?>" alt="<?= htmlspecialchars($farmer['username']) ?>" />
+            <p><?= htmlspecialchars($farmer['username']) ?></p>
+          </div>
+        <?php } ?>
+      </div>
+    </section>
+
+    
 
   </main>
   <script type="text/javascript">

@@ -32,7 +32,7 @@ $stmt->execute();
 $bookmarked_listings = $stmt->get_result();
 
 // Get latest messages
-$messages_sql = "SELECT m.*, f.name as farmer_name 
+$messages_sql = "SELECT m.*, f.username as farmer_name 
                 FROM messages m 
                 JOIN farmers f ON m.farmer_id = f.id 
                 WHERE m.buyer_id = ? 
