@@ -45,100 +45,98 @@ if (isset($_POST['log'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="css/style.css">
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background: url('images/rice.jpg') no-repeat center center fixed;
-            background-size: cover;
-            font-family: Arial, sans-serif;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-        }
+    body {
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(135deg, #e8f5e9, #ffffff); /* greenish white gradient */
+        font-family: Arial, sans-serif;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+    }
 
-        .main-header {
-            position: absolute;
-            top: 20px;
-            width: 100%;
-            text-align: center;
-        }
+    .main-header {
+        position: absolute;
+        top: 20px;
+        width: 100%;
+        text-align: center;
+    }
 
-        .main-header h2 {
-            font-size: 36px;
-            color: white;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
-            margin: 0;
-            padding: 10px 0;
-        }
+    .main-header h2 {
+        font-size: 36px;
+        color: #2e7d32; /* deep green */
+        margin: 0;
+        padding: 10px 0;
+    }
 
-        .auth-box {
-            background-color: rgba(195, 250, 108, 0.32);
-            padding: 40px;
-            width: 320px;
-            border-radius: 10px;
-            box-shadow: 0 0 15px rgba(0,0,0,0.3);
-            text-align: center;
-        }
+    .auth-box {
+        background-color: #ffffff;
+        padding: 40px;
+        width: 320px;
+        border-radius: 10px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }
 
-        .login-heading {
-            font-size: 30px;
-            text-align: center;
-            color: white;
-        }
+    .login-heading {
+        font-size: 30px;
+        color: #388e3c; /* medium green */
+        margin-bottom: 20px;
+    }
 
-        .auth-box h1 {
-            font-size: 25px;
-            margin-bottom: 20px;
-            color: white;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
-            
-        }
+    .auth-box h1 {
+        font-size: 25px;
+        margin-bottom: 20px;
+        color: #388e3c;
+    }
 
-        .form-group {
-            margin-bottom: 20px;
-            text-align: left;
-            color: #000;
-        }
+    .form-group {
+        margin-bottom: 20px;
+        text-align: left;
+        color: #2e7d32;
+    }
 
-        label {
-            display: block;
-            font-weight: bold;
-            margin-bottom: 5px;
-            color: white;
-        }
+    label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 5px;
+        color: #2e7d32;
+    }
 
-        input[type="email"],
-        input[type="password"] {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
+    input[type="email"],
+    input[type="password"] {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #c8e6c9;
+        border-radius: 5px;
+        background-color: #f1f8e9;
+    }
 
-        .btn {
-            width: 100%;
-            padding: 10px;
-            background-color: rgb(90, 203, 3);
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-        }
+    .btn {
+        width: 100%;
+        padding: 10px;
+        background-color: #4caf50; /* green */
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+    }
 
-        .btn:hover {
-            background-color: #219150;
-        }
+    .btn:hover {
+        background-color: #388e3c;
+    }
 
-        .error-msg {
-            color: red;
-            text-align: center;
-            margin-top: 15px;
-            font-weight: bold;
-        }
-    </style>
+    .error-msg {
+        color: red;
+        text-align: center;
+        margin-top: 15px;
+        font-weight: bold;
+    }
+</style>
+
 </head>
 <body>
     <header class="main-header">

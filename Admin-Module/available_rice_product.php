@@ -1,6 +1,6 @@
 <?php
 session_start();
-include('../backend/db_connect.php');
+include('db_connect.php');
 
 if (!isset($_SESSION['admin_id'])) {
     header("Location: admin-login.php");
@@ -19,21 +19,17 @@ if (!isset($_SESSION['admin_id'])) {
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(to right, #e0f7fa, #ffffff);
+            background: linear-gradient(to right, #e6f4ea, #ffffff); /* subtle greenish-white */
             padding: 20px;
             margin: 0;
-
-            background-size: cover;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
-            background-position: center;
         }
 
         h2 {
             text-align: center;
             font-size: 2em;
-            color: #2c3e50;
+            color: #2e7d32; /* dark green */
             margin-bottom: 30px;
+            text-shadow: 1px 1px 2px #a5d6a7;
         }
 
         .grid-container {
@@ -44,17 +40,19 @@ if (!isset($_SESSION['admin_id'])) {
         }
 
         .rice-card {
-            background: #fff;
+            background: #ffffff;
             padding: 20px;
             border-radius: 12px;
-            border: 1px solid #ddd;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 2px solid #a5d6a7; /* light green border */
+            box-shadow: 0 6px 15px rgba(46, 125, 50, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+            position: relative;
         }
 
         .rice-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+            transform: translateY(-7px);
+            box-shadow: 0 10px 25px rgba(46, 125, 50, 0.4);
+            border-color: #388e3c; /* darker green on hover */
         }
 
         .rice-card img {
@@ -63,90 +61,71 @@ if (!isset($_SESSION['admin_id'])) {
             object-fit: cover;
             border-radius: 10px;
             margin-bottom: 15px;
+            border: 2px solid #c8e6c9; /* subtle green border around image */
         }
 
         .rice-card h4 {
-            font-size: 1.2em;
+            font-size: 1.3em;
             margin: 10px 0 5px;
-            color: #34495e;
+            color: #2e7d32; /* dark green */
         }
 
         .rice-card p {
-            font-size: 1em;
-            color: #27ae60;
-            font-weight: bold;
+            font-size: 1.1em;
+            color: #388e3c; /* medium green */
+            font-weight: 700;
         }
 
-        .add-link {
-            display: inline-block;
-            margin: 40px auto 0;
-            text-align: center;
-            display: block;
-            text-decoration: none;
-            background-color: #2980b9;
-            color: white;
-            padding: 12px 25px;
-            border-radius: 8px;
-            font-size: 1em;
-            transition: background-color 0.3s ease;
-        }
+        .action-buttons {
+    margin-top: 15px;
+    display: flex;
+    justify-content: space-between;
+    gap: 10px; /* optional, adds space between buttons */
+}
 
-        .add-link:hover {
-            background-color: #1f618d;
-        }
+.action-buttons a,
+.action-buttons form button {
+    font-size: 0.95em;
+    border: none;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 700;
+    cursor: pointer;
+    color: white;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    padding: 10px 15px;
+    text-align: center;
+    box-sizing: border-box;
+    display: inline-block;
+}
+
+.edit-btn {
+    background-color: #43a047; /* green */
+}
+
+.edit-btn:hover {
+    background-color: #2e7d32; /* darker green */
+    box-shadow: 0 6px 12px rgba(46, 125, 50, 0.6);
+}
+
+.delete-btn {
+    background-color: #d32f2f; /* red */
+}
+
+.delete-btn:hover {
+    background-color: #b71c1c; /* darker red */
+    box-shadow: 0 6px 12px rgba(179, 28, 28, 0.6);
+}
 
         .no-data {
             text-align: center;
-            font-size: 1.2em;
-            color: #7f8c8d;
+            font-size: 1.3em;
+            color: #4caf50;
             margin-top: 40px;
+            font-weight: 600;
+            text-shadow: 1px 1px 1px #c8e6c9;
         }
-
-        .grid-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
-  margin-top: 20px;
-}
-
-.rice-card {
-  background-color: #fff;
-  padding: 15px;
-  border-radius: 10px;
-  box-shadow: 0 0 8px rgba(0,0,0,0.05);
-  text-align: center;
-  transition: transform 0.2s;
-}
-
-.rice-card:hover {
-  transform: translateY(-5px);
-}
-
-.rice-card img {
-  width: 100%;
-  height: 180px;
-  object-fit: cover;
-  border-radius: 8px;
-}
-
-.rice-card h4 {
-  margin: 10px 0 5px;
-  font-size: 18px;
-  color: #1d4d2d;
-}
-
-.rice-card p {
-  color: #555;
-  font-weight: bold;
-}
-
-.no-data {
-  text-align: center;
-  color: #999;
-  font-style: italic;
-  margin-top: 20px;
-}
-
     </style>
 </head>
 <body>
@@ -154,16 +133,23 @@ if (!isset($_SESSION['admin_id'])) {
 <h2>Available Rice Products</h2>
 <div class="grid-container">
 <?php
-$sql = "SELECT * FROM listings ORDER BY id DESC";
+$sql = "SELECT * FROM rice_prices ORDER BY id DESC";
 $result = $conn->query($sql);
 
 if ($result->num_rows > 0):
     while ($row = $result->fetch_assoc()):
 ?>
     <div class="rice-card">
-        <img src="../<?php echo htmlspecialchars($row['image_url']); ?>" alt="Rice Image">
-        <h4><?php echo htmlspecialchars($row['title']); ?></h4>
-        <p>Rs.<?php echo number_format($row['price_per_kg'], 2); ?>/kg</p>
+        <img src="<?php echo htmlspecialchars($row['image_path']); ?>" alt="Rice Image">
+        <h4><?php echo htmlspecialchars($row['rice_variety']); ?></h4>
+        <p>Rs.<?php echo number_format($row['max_price_per_kg'], 2); ?>/kg</p>
+        <div class="action-buttons">
+            <a href="edit_rice_product.php?id=<?= $row['id'] ?>" class="edit-btn">✏️ Edit</a>
+            <form method="post" action="delete_rice_product.php" onsubmit="return confirm('Delete this rice product?');">
+                <input type="hidden" name="id" value="<?= $row['id'] ?>">
+                <button type="submit" class="delete-btn">🗑 Delete</button>
+            </form>
+        </div>
     </div>
 <?php
     endwhile;
@@ -174,8 +160,6 @@ endif;
 $conn->close();
 ?>
 </div>
-
-<a class="add-link" href="add_rice_product.php">➕ Add New Rice Product</a>
 
 </body>
 </html>
