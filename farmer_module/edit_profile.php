@@ -433,9 +433,9 @@ $_SESSION['user_image'] = $farmer['profile_picture'] ?? '';
           <div class="box">
             <input
               type="tel"
-              name="Phone"
+              name="phone"
               placeholder="Phone Number"
-              value="<?= htmlspecialchars($farmer['Phone']) ?>" required />
+              value="<?= htmlspecialchars($farmer['phone']) ?>" required />
             <input type="email" name="email" placeholder="Email" value="<?= htmlspecialchars($farmer['email']) ?>" required />
           </div>
         </div>

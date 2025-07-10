@@ -38,8 +38,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
   $quantity = (float) $_POST['quantity'];
   $price = (float) $_POST['price_per_kg'];
   $harvest_date = $_POST['harvest_date'];
-  $farm_address = trim($_POST['farm_address']);
+  $farm_address = trim($_POST['location']);
   $img_path = $post['image_url'];
+  $is_available = isset($_POST['is_available']) ? 'Available' : 'Not Available';
+
 
   if (empty($title) || empty($rice_type) || empty($quantity) || empty($price) || empty($harvest_date) || empty($farm_address)) {
     header("Location: edit_posts.php?id=$post_id&msg=Please fill all required fields");
@@ -58,32 +60,44 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
       exit();
     }
 
-    if (!file_exists('uploads')) {
-      mkdir('uploads', 0777, true);
-    }
+    $upload_dir = '../product_pics/';
+    if (!is_dir($upload_dir)) {
+    mkdir($upload_dir, 0777, true);
+  }
+
 
     $file_ext = pathinfo($_FILES['product_picture']['name'], PATHINFO_EXTENSION);
-    $img_name = uniqid('img_', true) . '.' . $file_ext;
-    $new_img_path = "uploads/" . $img_name;
+$img_name = time() . '_' . basename($_FILES['product_picture']['name']);
+$img_path = 'product_pics/' . $img_name; // This is what will go into the DB
+$full_upload_path = '../' . $img_path;   // This is the actual location for move_uploaded_file
 
-    if (move_uploaded_file($_FILES['product_picture']['tmp_name'], $new_img_path)) {
-      if (file_exists($img_path)) {
-        unlink($img_path); // Delete old image
-      }
-      $img_path = $new_img_path;
-    } else {
-      header("Location: edit_posts.php?id=$post_id&msg=Image upload failed");
-      exit();
+    if (move_uploaded_file($_FILES['product_picture']['tmp_name'], $full_upload_path)) {
+    // Delete old image if it exists
+    if (!empty($post['image_url']) && file_exists('../' . $post['image_url'])) {
+        unlink('../' . $post['image_url']);
     }
+} else {
+    header("Location: edit_posts.php?id=$post_id&msg=Image upload failed");
+    exit();
+}
+
   }
 
   // Update post
-  $sql = "UPDATE listings SET 
+ /* $sql = "UPDATE listings SET 
             title = ?, description = ?, rice_type = ?, quantity = ?, price_per_kg = ?, 
-            harvest_date = ?, image_url = ?, farm_address = ?, updated_at = NOW()
+            harvest_date = ?, image_url = ?, location = ?, updated_at = NOW()
           WHERE id = ? AND farmer_id = ?";
   $stmt = $conn->prepare($sql);
   $stmt->bind_param("sssddsssii", $title, $description, $rice_type, $quantity, $price, $harvest_date, $img_path, $farm_address, $post_id, $farmer_id);
+*/
+
+$sql = "UPDATE listings SET 
+          title = ?, description = ?, rice_type = ?, quantity = ?, price_per_kg = ?, 
+          harvest_date = ?, image_url = ?, location = ?, is_available = ?, updated_at = NOW()
+        WHERE id = ? AND farmer_id = ?";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("sssddssssii", $title, $description, $rice_type, $quantity, $price, $harvest_date, $img_path, $farm_address, $is_available, $post_id, $farmer_id);
 
   if ($stmt->execute()) {
     header("Location: farmer_dashboard.php?msg=updated");
@@ -466,7 +480,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
               <label for="product-upload" class="upload-circle">
                 <span class="plus">+</span>
                 <?php if (!empty($post['image_url'])): ?>
-                  <img id="preview" src="<?php echo $post['image_url']; ?>" style="width: 100%; height: 100%; object-fit: cover; border-radius: 25px;">
+                  <img id="preview" src="../<?php echo $post['image_url']; ?>" style="width: 100%; height: 100%; object-fit: cover; border-radius: 25px;">
                 <?php endif; ?>
               </label>
               <input
@@ -494,17 +508,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
               <div class="display-group">
                 <input
                   type="text"
-                  name="farm_address"
+                  name="location"
                   placeholder="Location / Farm Address"
-                  value="<?php echo $post['farm_address']; ?>" required />
+                  value="<?php echo $post['location']; ?>" required />
               </div>
 
-              <div class="display-group">
-                <div class="certification">
-                  <label>Organic Certification</label>
-                  <input type="file" name="Certification" />
-                </div>
-              </div>
+              
             </div>
           </div>
         </div>
@@ -522,17 +531,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             </div>
 
             <div class="box-1">
-              <div class="display-group">
-                <div class="harvest-date">
-                  <label for="created_at">Created At</label>
-                  <input type="date" id="created_at" value="<?= $post['created_at']; ?>" readonly>
-                </div>
-              </div>
+              
 
               <div class="display-group">
                 <div class="harvest-date">
                   <label for="updated_at">Updated At</label>
-                  <input type="date" id="updated_at" value="<?= $post['updated_at']; ?>" readonly>
+                  <input type="date" id="updated_at" value="<?= $post['updated_at']; ?>" >
                 </div>
               </div>
             </div>
@@ -541,7 +545,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
               <div class="display-group">
                 <div class="availability">
                   <label for="is_available">Available</label>
-                  <input type="checkbox" id="is_available" <?= $post['is_available'] ? 'checked' : '' ?> disabled>
+                  <input type="checkbox" id="is_available" name="is_available" value="Available" <?= ($post['is_available'] === 'Available') ? 'checked' : '' ?>>
                 </div>
               </div>
             </div>
@@ -550,6 +554,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
       </div>
     </form>
   </div>
+<?php if (isset($_GET['msg'])): ?>
+<script>
+  alert("<?= htmlspecialchars($_GET['msg']) ?>");
+</script>
+<?php endif; ?>
 
   <script>
     function previewImage() {

@@ -16,8 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $harvest_date = $_POST['harvest_date'];
     $location = trim($_POST['farm_address']);
     $description = trim($_POST['description']);
-    $is_available = 1;
-
+    $is_available = isset($_POST['availability']) ? 'Available' : 'Not Available';
     $image_url = "";
     $uploadDir = __DIR__ . '/../product_pics/';
     $relativePath = 'product_pics/';
@@ -38,10 +37,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // ✅ Moved inside POST
     $sql = "INSERT INTO listings (farmer_id, title, description, rice_type, quantity, price_per_kg, harvest_date, location, image_url, is_available) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?,?, ?)";
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("isssddssi", $farmer_id, $title, $description, $rice_type, $quantity, $price_per_kg, $harvest_date, $location, $image_url, $is_available);
+    $stmt->bind_param("isssddssss", $farmer_id, $title, $description, $rice_type, $quantity, $price_per_kg, $harvest_date, $location, $image_url, $is_available);
+
 
     if ($stmt->execute()) {
         header("Location: farmer_dashboard.php?msg=success");
@@ -492,7 +492,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               <div class="display-group">
                 <div class="availability">
                   <label for="availability">Available</label>
-                  <input type="checkbox" id="availability">
+                  <input type="checkbox" id="availability" name="availability" value="Available">
                 </div>
               </div>
             </div>

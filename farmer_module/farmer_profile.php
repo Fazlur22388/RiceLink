@@ -19,7 +19,8 @@ if ($result->num_rows == 1) {
 }
 
 // Profile picture
-$profilePicture = !empty($farmer['profile_picture']) ? 'uploads/' . $farmer['profile_picture'] : 'default-avatar.png';
+$profilePicture = !empty($farmer['profile_picture']) ? $farmer['profile_picture'] : 'uploads/default-avatar.png';
+
 
 // Full address for Google Maps
 $fullAddress = urlencode($farmer['address'] . ', ' . $farmer['city'] . ', ' . $farmer['district']);
@@ -461,7 +462,8 @@ $fullAddress = urlencode($farmer['address'] . ', ' . $farmer['city'] . ', ' . $f
         <!-- profile pic -->
         <div class="profile-container">
           <div class="profile-pic">
-            <img src="<?= !empty($farmer['profile_picture']) ? 'uploads/' . htmlspecialchars($farmer['profile_picture']) : 'uploads/default.png' ?>" alt="Profile Picture" id="profilePicture" />
+            <img src="<?= !empty($farmer['profile_picture']) ? htmlspecialchars($farmer['profile_picture']) : 'uploads/default.png' ?>" />
+
           </div>
         </div>
 
@@ -491,17 +493,7 @@ $fullAddress = urlencode($farmer['address'] . ', ' . $farmer['city'] . ', ' . $f
         </div>
       </div>
 
-      <div class="display-3">
-        <iframe
-          width="100%"
-          height="300"
-          frameborder="0"
-          style="border: 0"
-          referrerpolicy="no-referrer-when-downgrade"
-          src="https://www.google.com/maps/embed/v1/place?key=YOUR_GOOGLE_MAPS_API_KEY&q=<?= $fullAddress ?>"
-          allowfullscreen>
-        </iframe>
-      </div>
+     
     </div>
   </div>
 

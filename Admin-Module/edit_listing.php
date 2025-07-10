@@ -30,15 +30,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $status = $conn->real_escape_string($_POST['status']);
 
     $conn->query("UPDATE listings SET 
-        variety_name = '$variety',
-        quantity_kg = '$quantity',
+        title = '$variety',
+        quantity= '$quantity',
         price_per_kg = '$price',
-        stock_location = '$location',
+        location = '$location',
         description = '$description',
-        status = '$status'
+        is_available = '$status'
         WHERE id = $id");
 
-    header("Location: manage_listings.php?msg=updated");
+    header("Location: manage-listings.php?msg=updated");
     exit();
 }
 ?>
@@ -102,25 +102,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <h2>Edit Listing</h2>
     <form method="post">
         <label>Variety:</label>
-        <input type="text" name="variety" value="<?= htmlspecialchars($listing['variety_name']) ?>" required>
+        <input type="text" name="variety" value="<?= htmlspecialchars($listing['title']) ?>" required>
 
         <label>Quantity (kg):</label>
-        <input type="number" name="quantity" step="0.01" value="<?= $listing['quantity_kg'] ?>" required>
+        <input type="number" name="quantity" step="0.01" value="<?= $listing['quantity'] ?>" required>
 
         <label>Price per kg:</label>
         <input type="number" name="price" step="0.01" value="<?= $listing['price_per_kg'] ?>" required>
 
         <label>Location:</label>
-        <input type="text" name="location" value="<?= htmlspecialchars($listing['stock_location']) ?>" required>
+        <input type="text" name="location" value="<?= htmlspecialchars($listing['location']) ?>" required>
 
         <label>Description:</label>
         <textarea name="description" rows="4" required><?= htmlspecialchars($listing['description']) ?></textarea>
 
         <label>Status:</label>
         <select name="status">
-            <option value="pending" <?= $listing['status'] === 'pending' ? 'selected' : '' ?>>Pending</option>
-            <option value="approved" <?= $listing['status'] === 'approved' ? 'selected' : '' ?>>Approved</option>
-            <option value="rejected" <?= $listing['status'] === 'rejected' ? 'selected' : '' ?>>Rejected</option>
+            <option value="pending" <?= $listing['is_available'] === 'pending' ? 'selected' : '' ?>>Pending</option>
+            <option value="approved" <?= $listing['is_available'] === 'approved' ? 'selected' : '' ?>>Approved</option>
+            <option value="rejected" <?= $listing['is_available'] === 'rejected' ? 'selected' : '' ?>>Rejected</option>
         </select>
 
         <button type="submit">Update Listing</button>

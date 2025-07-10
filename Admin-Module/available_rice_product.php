@@ -1,6 +1,6 @@
 <?php
 session_start();
-include('db_connect.php');
+include('../backend/db_connect.php');
 
 if (!isset($_SESSION['admin_id'])) {
     header("Location: admin-login.php");
@@ -22,10 +22,12 @@ if (!isset($_SESSION['admin_id'])) {
             background: linear-gradient(to right, #e6f4ea, #ffffff); /* subtle greenish-white */
             padding: 20px;
             margin: 0;
+
+           
         }
 
         h2 {
-            text-align: center;
+             text-align: center;
             font-size: 2em;
             color: #2e7d32; /* dark green */
             margin-bottom: 30px;
@@ -40,7 +42,7 @@ if (!isset($_SESSION['admin_id'])) {
         }
 
         .rice-card {
-            background: #ffffff;
+             background: #ffffff;
             padding: 20px;
             border-radius: 12px;
             border: 2px solid #a5d6a7; /* light green border */
@@ -71,7 +73,7 @@ if (!isset($_SESSION['admin_id'])) {
         }
 
         .rice-card p {
-            font-size: 1.1em;
+             font-size: 1.1em;
             color: #388e3c; /* medium green */
             font-weight: 700;
         }
@@ -126,23 +128,28 @@ if (!isset($_SESSION['admin_id'])) {
             font-weight: 600;
             text-shadow: 1px 1px 1px #c8e6c9;
         }
-    </style>
+            
+        
+            
+
+
+            </style>
 </head>
 <body>
 
 <h2>Available Rice Products</h2>
 <div class="grid-container">
 <?php
-$sql = "SELECT * FROM rice_prices ORDER BY id DESC";
+$sql = "SELECT * FROM listings ORDER BY id DESC";
 $result = $conn->query($sql);
 
 if ($result->num_rows > 0):
     while ($row = $result->fetch_assoc()):
 ?>
     <div class="rice-card">
-        <img src="<?php echo htmlspecialchars($row['image_path']); ?>" alt="Rice Image">
-        <h4><?php echo htmlspecialchars($row['rice_variety']); ?></h4>
-        <p>Rs.<?php echo number_format($row['max_price_per_kg'], 2); ?>/kg</p>
+        <img src="../<?php echo htmlspecialchars($row['image_url']); ?>" alt="Rice Image">
+        <h4><?php echo htmlspecialchars($row['variety']); ?></h4>
+        <p>Rs.<?php echo number_format($row['price_per_kg'], 2); ?>/kg</p>
         <div class="action-buttons">
             <a href="edit_rice_product.php?id=<?= $row['id'] ?>" class="edit-btn">✏️ Edit</a>
             <form method="post" action="delete_rice_product.php" onsubmit="return confirm('Delete this rice product?');">
@@ -160,6 +167,8 @@ endif;
 $conn->close();
 ?>
 </div>
+
+<a class="add-link" href="add_rice_product.php">➕ Add New Rice Product</a>
 
 </body>
 </html>

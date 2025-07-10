@@ -140,12 +140,12 @@ $result = $conn->query("SELECT * FROM listings ORDER BY created_at DESC");
             <tr>
                 <td><?= $row['id'] ?></td>
                 <td><?= $row['farmer_id'] ?></td>
-                <td><?= htmlspecialchars($row['variety_name']) ?></td>
-                <td><?= $row['quantity_kg'] ?></td>
-                <td>$<?= number_format($row['price_per_kg'], 2) ?></td>
-                <td><?= htmlspecialchars($row['stock_location']) ?></td>
+                <td><?= htmlspecialchars($row['title']) ?></td>
+                <td><?= $row['quantity'] ?></td>
+                <td><?= number_format($row['price_per_kg'], 2) ?></td>
+                <td><?= htmlspecialchars($row['location']) ?></td>
                 <td><?= htmlspecialchars($row['description']) ?></td>
-                <td><?= ucfirst(htmlspecialchars($row['status'])) ?></td>
+                <td><?= ucfirst(htmlspecialchars($row['is_available'])) ?></td>
                 <td>
                     <form method="get" action="edit_listing.php">
                         <input type="hidden" name="id" value="<?= $row['id'] ?>">

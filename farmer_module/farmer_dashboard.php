@@ -297,6 +297,7 @@ $active_posts_count = mysqli_fetch_assoc(mysqli_query($conn, $query_active_posts
         <li><a href="change_password.php">Change Password</a></li>
       </ul>
     </nav>
+    
     <a href="logout.php" class="btn-logout">Logout</a>
     <a href="delete_account.php" class="dlt-acc">Delete Account</a>
   </div>
@@ -304,7 +305,11 @@ $active_posts_count = mysqli_fetch_assoc(mysqli_query($conn, $query_active_posts
   <main class="main-content">
     <div class="header">
       <h1>Welcome, <?= htmlspecialchars($username) ?></h1>
-      <img src=".uploads<?= htmlspecialchars($profile_picture) ?>" alt="Profile" />
+      <?php
+      $profile_picture = !empty($farmer['profile_picture']) ? $farmer['profile_picture'] : 'default-avatar.png';
+      ?>
+      <img src="uploads/<?= htmlspecialchars($profile_picture) ?>" alt="Profile" />
+
     </div>
 
     <div class="stats">
