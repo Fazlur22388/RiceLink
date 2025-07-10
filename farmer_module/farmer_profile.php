@@ -301,6 +301,9 @@ $fullAddress = urlencode($farmer['address'] . ', ' . $farmer['city'] . ', ' . $f
           details and manage it.
         </p>
         <button onclick="window.location.href='edit_profile.php'">Edit Profile</button>
+        
+        <button  onclick="window.location.href='farmer_dashboard.php'">Return to Dashboard</button>
+
 
       </div>
     </div>

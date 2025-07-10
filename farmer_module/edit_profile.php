@@ -15,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $username = mysqli_real_escape_string($conn, $_POST['username']);
   $dob = mysqli_real_escape_string($conn, $_POST['dob']);
   $nic = mysqli_real_escape_string($conn, $_POST['nic']);
-  $phone = mysqli_real_escape_string($conn, $_POST['Phone']);
+  $phone = mysqli_real_escape_string($conn, $_POST['phone']);
   $email = mysqli_real_escape_string($conn, $_POST['email']);
   $address = mysqli_real_escape_string($conn, $_POST['address']);
   $district = mysqli_real_escape_string($conn, $_POST['district']);
@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   }
 
   // Then include $image_sql in your update query:
-  $update = "UPDATE farmers SET name = '$name', email = '$email' $image_sql WHERE id = $user_id";
+  $update = "UPDATE farmers SET name = '$username', email = '$email' $image_sql WHERE id = $farmer_id";
 
 
   // Handle license file upload (optional)
@@ -371,6 +371,7 @@ $_SESSION['user_image'] = $farmer['profile_picture'] ?? '';
       </div>
     </div>
   </div>
+  
 
   <!-- main -->
   <form id="editprofileForm" action="" method="POST" enctype="multipart/form-data" onsubmit="return validateForm();">
@@ -379,7 +380,8 @@ $_SESSION['user_image'] = $farmer['profile_picture'] ?? '';
     <div class="profile-header">
       <div class="profile-picture-container">
         <label for="profileInput" class="profile-picture-label">
-          <img src="uploads/<?= htmlspecialchars($farmer['profile_picture'] ?? 'default.png') ?>" alt="Profile Picture" id="profilePicture" />
+          
+          <img src="<?= !empty($farmer['profile_picture']) ? htmlspecialchars($farmer['profile_picture']) : 'uploads/default.png' ?>" />
 
           <div class="edit-icon">
             <img src="images/camera.png" alt="edit-icon" />

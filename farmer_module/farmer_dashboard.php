@@ -14,7 +14,8 @@ $result_user = mysqli_query($conn, $query_user);
 $user = mysqli_fetch_assoc($result_user);
 
 $username = $user['username'];
-$profile_picture = !empty($user['profile_picture']) ? 'uploads/' . $user['profile_picture'] : 'uploads/default.png';
+$profilePicture = !empty($user['profile_picture']) ? $user['profile_picture'] : 'uploads/default-avatar.png';
+//$profilePicture = !empty($farmer['profile_picture']) ? $farmer['profile_picture'] : 'uploads/default-avatar.png';
 
 $query_posts = "SELECT * FROM listings WHERE farmer_id = $user_id ORDER BY id DESC";
 $posts_result = mysqli_query($conn, $query_posts);
@@ -110,6 +111,49 @@ $active_posts_count = mysqli_fetch_assoc(mysqli_query($conn, $query_active_posts
     .dlt-acc:hover {
       text-decoration: underline;
     }
+
+    .sidebar {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.sidebar-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 20px;
+}
+
+.sidebar-btn {
+  background-color: white;
+  color: #1d4d2d;
+  text-align: center;
+  padding: 10px;
+  text-decoration: none;
+  border-radius: 6px;
+  transition: 0.3s;
+  border: none;
+  font-weight: bold;
+}
+
+.sidebar-btn:hover {
+  background-color: #216445;
+  color: white;
+}
+
+.delete-btn {
+  background-color: white;
+  border: 1px solid #e74c3c;
+  color: #e74c3c;
+}
+
+.delete-btn:hover {
+  background-color: #e74c3c;
+  color: white;
+}
+
 
     .main-content {
       margin-left: 250px;
@@ -279,36 +323,40 @@ $active_posts_count = mysqli_fetch_assoc(mysqli_query($conn, $query_active_posts
   border-radius: 5px;
 }
 
+
+
   </style>
 </head>
 
 <body>
-  <div id="google_translate_element" style="float:right; margin: 10px;"></div>
-  <div class="sidebar">
-    <!-- <h2>RiceLink</h2> -->
+
+<div class="sidebar">
+  <div class="sidebar-inner">
     <img src="images/logo.png" alt="logo" height="100" width="100" style="margin-left: 50px;">
     <nav>
       <ul>
         <li><a href="farmer_dashboard.html">Dashboard</a></li>
         <li><a href="add_posts.php">Add New Rice Posts</a></li>
         <li><a href="farmer_profile.php">Farmer Profile</a></li>
-        <!-- <li><a href="#whatsapp center">Message Center</a></li> -->
         <li><a href="edit_profile.php">Edit Profile</a></li>
         <li><a href="change_password.php">Change Password</a></li>
       </ul>
     </nav>
-    
-    <a href="logout.php" class="btn-logout">Logout</a>
-    <a href="delete_account.php" class="dlt-acc">Delete Account</a>
   </div>
+
+  <div class="sidebar-actions">
+    <a href="delete_account.php" class="btn sidebar-btn delete-btn">Delete Account</a>
+    <a href="logout.php" class="btn sidebar-btn logout-btn">Logout</a>
+  </div>
+</div>
+
 
   <main class="main-content">
     <div class="header">
       <h1>Welcome, <?= htmlspecialchars($username) ?></h1>
-      <?php
-      $profile_picture = !empty($farmer['profile_picture']) ? $farmer['profile_picture'] : 'default-avatar.png';
-      ?>
-      <img src="uploads/<?= htmlspecialchars($profile_picture) ?>" alt="Profile" />
+      
+<img src="<?= htmlspecialchars($profilePicture) ?>" alt="Profile Picture" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover;" />
+
 
     </div>
 
